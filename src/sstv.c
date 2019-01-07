@@ -13,6 +13,11 @@ sstv_free_t sstv_free_user = NULL;
 sstv_error_t
 sstv_init(sstv_malloc_t alloc_func, sstv_free_t dealloc_func)
 {
+    /* Check that either both or none of the functions are provided */
+    if ((!alloc_func && dealloc_func) || (alloc_func && !dealloc_func)) {
+        return SSTV_BAD_INITIALIZERS;
+    }
+
     /* Keep user functions for allocation/deallocation */
     sstv_malloc_user = alloc_func;
     sstv_free_user = dealloc_func;

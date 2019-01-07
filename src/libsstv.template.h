@@ -20,6 +20,11 @@
 #define SSTV_VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
 
 /*
+ * Limits
+ */
+#define SSTV_DEFAULT_ENCODER_CONTEXT_COUNT @DEFAULT_ENCODER_CONTEXT_COUNT@
+
+/*
  * Error codes
  */
 typedef enum {
@@ -27,7 +32,13 @@ typedef enum {
     SSTV_OK                     = 0,
 
     /* Unknown error - should not happen, fatal */
-    SSTV_UNKNOWN                = 1,
+    SSTV_INTERNAL_ERROR         = 1,
+
+    /* Generic library errors */
+    SSTV_BAD_INITIALIZERS       = 100,
+    SSTV_BAD_USER_ALLOC         = 101,
+    SSTV_BAD_USER_DEALLOC       = 102,
+    SSTV_BAD_PARAMETER          = 103,
 
     /* Encoder return codes */
     SSTV_ENCODE_SUCCESSFUL      = 1000,
@@ -39,7 +50,13 @@ typedef enum {
  * SSTV modes
  */
 typedef enum {
-    SSTV_MODE_WRAASE_SC_1_8 = 0,
+
+    /* PD modes */
+    SSTV_PD90,
+    SSTV_PD120,
+    SSTV_PD160,
+    SSTV_PD180,
+    SSTV_PD240,
 } sstv_mode_t;
 
 /*

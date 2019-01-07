@@ -7,6 +7,9 @@ set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
 
+# Limtis
+set (DEFAULT_ENCODER_CONTEXT_COUNT 4)
+
 # Compiler setup
 set(CMAKE_C_STANDARD 99)
 add_compile_options (-Wall -Wextra -pedantic)
@@ -40,13 +43,14 @@ set (ENCODE_TOOL_SOURCES
 
 # Dependencies
 find_library (GLOG_LIBRARY glog)
-find_package (gflags REQUIRED)
 find_library (LIQUID_LIBRARY liquid)
+find_package (gflags REQUIRED)
+find_package (X11 REQUIRED)
 
 # Library (C compiler)
 add_library (${PROJECT_NAME} SHARED ${LIB_SOURCES})
 set_property (TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE C)
-target_include_directories(${PROJECT_NAME} PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
+target_include_directories (${PROJECT_NAME} PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
 target_link_libraries (${PROJECT_NAME} liquid)
 
 # Tools (C++ compiler)
@@ -55,5 +59,5 @@ if (BUILD_TOOLS)
   set_property (TARGET ${PROJECT_NAME}-encode PROPERTY LINKER_LANGUAGE CXX)
   set_property (TARGET ${PROJECT_NAME}-encode PROPERTY CXX_STANDARD 14)
   target_include_directories(${PROJECT_NAME}-encode PUBLIC "${SRC_DIR}/tools" PUBLIC "${INCLUDE_DIR}")
-  target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME} glog gflags)
+  target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME} glog gflags X11)
 endif (BUILD_TOOLS)
