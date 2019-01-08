@@ -25,15 +25,8 @@ typedef enum {
     SSTV_ENCODER_STATE_BREAK,
     SSTV_ENCODER_STATE_LEADER_TONE_2,
 
-    SSTV_ENCODER_STATE_VIS_START_BIT = 99,
-    SSTV_ENCODER_STATE_VIS_BIT0 = 100,
-    SSTV_ENCODER_STATE_VIS_BIT1 = 101,
-    SSTV_ENCODER_STATE_VIS_BIT2 = 102,
-    SSTV_ENCODER_STATE_VIS_BIT3 = 103,
-    SSTV_ENCODER_STATE_VIS_BIT4 = 104,
-    SSTV_ENCODER_STATE_VIS_BIT5 = 105,
-    SSTV_ENCODER_STATE_VIS_BIT6 = 106,
-    SSTV_ENCODER_STATE_VIS_BIT7 = 107,
+    SSTV_ENCODER_STATE_VIS_START_BIT,
+    SSTV_ENCODER_STATE_VIS_BIT,
     SSTV_ENCODER_STATE_VIS_STOP_BIT,
 
     SSTV_ENCODER_STATE_END
@@ -59,6 +52,14 @@ typedef struct {
         uint16_t phase_delta;
         size_t remaining_samples;
     } fsk;
+
+    /* state extra info */
+    union {
+        struct {
+            uint8_t visp;
+            uint8_t curr_bit;
+        } vis;
+    } extra;
 } sstv_encoder_context_t;
 
 /*
@@ -202,24 +203,25 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         context->state = SSTV_ENCODER_STATE_VIS_START_BIT;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
         context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        context->extra.vis.visp = sstv_get_visp_code(context->mode);
+        context->extra.vis.curr_bit = 0;
         return SSTV_OK;
     }
 
     /* VIS bits */
-    if ((context->state >= SSTV_ENCODER_STATE_VIS_START_BIT)
-        && (context->state < SSTV_ENCODER_STATE_VIS_BIT7))
+    if (context->state == SSTV_ENCODER_STATE_VIS_START_BIT
+        || (context->state == SSTV_ENCODER_STATE_VIS_BIT && context->extra.vis.curr_bit <= 7))
     {
-        uint8_t visp = sstv_get_visp_code(context->mode);
-        uint8_t bit = visp >> (context->state - SSTV_ENCODER_STATE_VIS_START_BIT) & 0x1;
-
-        context->state ++;
+        uint8_t bit = (context->extra.vis.visp >> context->extra.vis.curr_bit) & 0x1;
+        context->state = SSTV_ENCODER_STATE_VIS_BIT;
+        context->extra.vis.curr_bit ++;
         context->fsk.phase_delta = DPHASE_FROM_FREQ((bit ? 1100 : 1300), context->sample_rate);
         context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
         return SSTV_OK;
     }
 
     /* VIS stop bit */
-    if (context->state == SSTV_ENCODER_STATE_VIS_BIT7) {
+    if (context->state == SSTV_ENCODER_STATE_VIS_BIT) {
         context->state = SSTV_ENCODER_STATE_VIS_STOP_BIT;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
         context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);

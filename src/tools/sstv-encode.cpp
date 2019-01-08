@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     }
 
     /* create a sample buffer for output */
-    uint8_t samp_buffer[128 * 1024];
+    int16_t samp_buffer[128 * 1024];
     sstv_signal_t signal;
     if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT16, 128 * 1024, samp_buffer) != SSTV_OK) {
         LOG(FATAL) << "sstv_pack_signal() failed";
