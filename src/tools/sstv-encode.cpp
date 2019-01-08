@@ -42,20 +42,28 @@ int main(int argc, char **argv)
         LOG(FATAL) << "Encoding mode not provided, use --mode";
     }
 
-    /* load image */
-    LOG(INFO) << "Loading image from " << FLAGS_input;
-    cimg_library::CImg<unsigned char> input_image(FLAGS_input.c_str());
-    uint8_t *bytes = input_image.data();
+    /* TODO: parse SSTV mode */
+    sstv_mode_t mode = SSTV_MODE_PD120;
 
-    /* initialize an encoder */
+    /* load image from file (TODO: perform normalization from source to desired properties) */
+    LOG(INFO) << "Loading image from " << FLAGS_input;
+    cimg_library::CImg<unsigned char> input_image = (cimg_library::CImg<>(FLAGS_input.c_str())).RGBtoYCbCr();
+
+    sstv_image_t sstv_image;
+    if (sstv_pack_image(&sstv_image, input_image.width(), input_image.height(), SSTV_FORMAT_YCBCR, input_image.data()) != SSTV_OK) {
+        LOG(FATAL) << "sstv_pack_image() failed";
+    }
+
+    /* initialize library */
     LOG(INFO) << "Initializing libsstv";
     if (sstv_init(malloc, free) != SSTV_OK) {
         LOG(FATAL) << "Failed to initialize libsstv";
     }
 
+    /* create encoder context */
     LOG(INFO) << "Creating encoding context";
     void *ctx = nullptr;
-    if (sstv_create_encoder(SSTV_PD120, bytes, FLAGS_sample_rate, &ctx) != SSTV_OK) {
+    if (sstv_create_encoder(&ctx, sstv_image, mode, FLAGS_sample_rate) != SSTV_OK) {
         LOG(FATAL) << "Failed to create SSTV encoder";
     }
     if (!ctx) {
