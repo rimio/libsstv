@@ -35,6 +35,7 @@ configure_file (
 set (LIB_SOURCES
   "${SRC_DIR}/sstv.c"
   "${SRC_DIR}/encoder.c"
+  "${SRC_DIR}/luts.c"
 )
 
 set (ENCODE_TOOL_SOURCES

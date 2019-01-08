@@ -54,6 +54,13 @@ int main(int argc, char **argv)
         LOG(FATAL) << "sstv_pack_image() failed";
     }
 
+    /* create a sample buffer for output */
+    int8_t samp_buffer[128 * 1024];
+    sstv_signal_t signal;
+    if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT8, 128 * 1024, samp_buffer) != SSTV_OK) {
+        LOG(FATAL) << "sstv_pack_signal() failed";
+    }
+
     /* initialize library */
     LOG(INFO) << "Initializing libsstv";
     if (sstv_init(malloc, free) != SSTV_OK) {
@@ -68,6 +75,26 @@ int main(int argc, char **argv)
     }
     if (!ctx) {
         LOG(FATAL) << "NULL encoder received";
+    }
+
+    /* encode */
+    while (true) {
+        /* encode block */
+        sstv_error_t rc = sstv_encode(ctx, &signal);
+        if (rc != SSTV_ENCODE_SUCCESSFUL && rc != SSTV_ENCODE_END) {
+            LOG(FATAL) << "sstv_encode() failed with rc " << rc;
+        }
+
+        /* DEBUG: print block as csv */
+        for (size_t i=0; i < signal.count; i ++) {
+            std::cout << (int)((int8_t *)signal.buffer)[i] << std::endl;
+        }
+        std::cout << std::endl << std::endl;
+
+        /* exit case */
+        if (rc == SSTV_ENCODE_END) {
+            break;
+        }
     }
 
     /* cleanup */

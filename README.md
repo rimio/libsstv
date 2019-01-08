@@ -1,2 +1,2 @@
 # libsstv
-SSTV C++ encoder/decoder library.
+SSTV C encoder/decoder library for embedded systems.

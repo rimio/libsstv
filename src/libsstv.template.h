@@ -42,13 +42,15 @@ typedef enum {
     SSTV_BAD_MODE               = 104,
     SSTV_BAD_FORMAT             = 105,
     SSTV_BAD_RESOLUTION         = 106,
+    SSTV_BAD_SAMPLE_TYPE        = 107,
 
     SSTV_ALLOC_FAIL             = 200,
 
     /* Encoder return codes */
     SSTV_ENCODE_SUCCESSFUL      = 1000,
     SSTV_ENCODE_END             = 1001,
-    SSTV_ENCODE_FAIL            = 1002,
+
+    SSTV_NO_DEFAULT_ENCODERS    = 1100,
 } sstv_error_t;
 
 /*
@@ -95,6 +97,34 @@ typedef struct {
     /* image buffer */
     uint8_t *buffer;
 } sstv_image_t;
+
+/*
+ * Signal sample type
+ */
+typedef enum {
+    SSTV_SAMPLE_INT8,
+    SSTV_SAMPLE_INT16
+} sstv_sample_type_t;
+
+/*
+ * Signal container
+ */
+typedef struct {
+    /* buffer pointer */
+    void *buffer;
+
+    /* size in bytes */
+    size_t size;
+
+    /* sample type */
+    sstv_sample_type_t type;
+
+    /* number of total samples */
+    size_t capacity;
+
+    /* number of used samples */
+    size_t count;
+} sstv_signal_t;
 
 
 /*
@@ -170,8 +200,53 @@ extern sstv_error_t sstv_pack_image(sstv_image_t *out_img, size_t width, size_t 
  */
 extern sstv_error_t sstv_delete_image(sstv_image_t *img);
 
+/*
+ * Pack a signal buffer into a signal structure.
+ *   sig(in): signal structure to initialize
+ *   type(in): sample type
+ *   capacity(in): buffer capacity in sampless
+ *   buffer(in): buffer pointer
+ *   returns: error code
+ *
+ * NOTE: Buffer is managed by user.
+ */
+extern sstv_error_t sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, size_t capacity, void *buffer);
+
+/*
+ * Create an SSTV encoder.
+ *   out_ctx(out): output context structure pointer
+ *   image(in): image buffer
+ *   mode(in): SSTV mode
+ *   sample_rate(in): output signal sample rate
+ *   returns: error code
+ *
+ * NOTE: Context shall never be modified by the user.
+ * NOTE: If an allocator/deallocator is provided via sstv_init(), then the
+ * context structure will be dynamically allocated. Otherwise, one of the
+ * default (static) structures, built into the library, will be used. There are
+ * SSTV_DEFAULT_ENCODER_CONTEXT_COUNT default structures, and once these are
+ * used up, a SSTV_NO_DEFAULT_ENCODERS error is returned.
+ */
 extern sstv_error_t sstv_create_encoder(void **out_ctx, sstv_image_t image, sstv_mode_t mode, size_t sample_rate);
+
+/*
+ * Deletes an SSTV encoder.
+ *   ctx(in): encoder context structure pointer
+ *   returns: error code
+ *
+ * NOTE: If context is one of the default encoders, then it will be marked as
+ * reusable and can be claimed again by sstv_create_encoder().
+ */
 extern sstv_error_t sstv_delete_encoder(void *ctx);
-extern sstv_error_t sstv_encode(void *ctx, uint8_t *buffer, size_t buffer_size);
+
+/*
+ * Encode image into SSTV signal.
+ *   ctx(in): encoder context structure pointer
+ *   signal(in): output signal container
+ *   returns: SSTV_ENCODE_SUCCESSFUL on successful fill of signal buffer
+ *            SSTV_ENCODE_END on successful encoding of whole image
+ *            error code otherwise
+ */
+extern sstv_error_t sstv_encode(void *ctx, sstv_signal_t *signal);
 
 #endif

@@ -166,3 +166,32 @@ sstv_delete_image(sstv_image_t *img)
     /* done */
     return SSTV_OK;
 }
+
+sstv_error_t
+sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, size_t capacity, void *buffer)
+{
+    if (!sig) {
+        return SSTV_BAD_PARAMETER;
+    }
+
+    switch(type) {
+        case SSTV_SAMPLE_INT8:
+            sig->size = capacity;
+            break;
+
+        case SSTV_SAMPLE_INT16:
+            sig->size = 2 * capacity;
+            break;
+
+        default:
+            return SSTV_BAD_SAMPLE_TYPE;
+    }
+
+    sig->buffer = buffer;
+    sig->type = type;
+    sig->capacity = capacity;
+    sig->count = 0;
+
+    /* done */
+    return SSTV_OK;
+}

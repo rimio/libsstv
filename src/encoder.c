@@ -7,6 +7,24 @@
 
 #include "sstv.h"
 #include "libsstv.h"
+#include "luts.h"
+
+/*
+ * Computation helpers
+ */
+#define REMAINING_SAMPLES_US(time_us, sample_rate) ((uint64_t)(time_us) * (uint64_t)(sample_rate) / 1000000)
+#define DPHASE_FROM_FREQ(freq, sample_rate) ((uint64_t)(freq) * 65536 / (uint64_t)(sample_rate))
+
+/*
+ * Encoder state
+ */
+typedef enum {
+    SSTV_ENCODER_STATE_START,
+    SSTV_ENCODER_STATE_LEADER_TONE_1,
+    SSTV_ENCODER_STATE_BREAK,
+    SSTV_ENCODER_STATE_LEADER_TONE_2,
+    SSTV_ENCODER_STATE_END
+} sstv_encoder_state_t;
 
 /*
  * Encoder context
@@ -18,9 +36,21 @@ typedef struct {
     /* output configuration */
     sstv_mode_t mode;
     size_t sample_rate;
+
+    /* current state */
+    sstv_encoder_state_t state;
+
+    /* current FSK value to be written */
+    struct {
+        uint16_t phase;
+        uint16_t phase_delta;
+        size_t remaining_samples;
+    } fsk;
 } sstv_encoder_context_t;
 
-/* default encoder contexts, for when no allocation/deallocation routines are provided */
+/*
+ * Default encoder contexts, for when no allocation/deallocation routines are provided
+ */
 static sstv_encoder_context_t default_encoder_context[SSTV_DEFAULT_ENCODER_CONTEXT_COUNT];
 static uint64_t default_encoder_context_usage = 0x0;
 
@@ -70,16 +100,18 @@ sstv_create_encoder(void **out_ctx, sstv_image_t image, sstv_mode_t mode, size_t
                 break;
             }
         }
-    }
-
-    if (!ctx) {
-        return SSTV_INTERNAL_ERROR;
+        if (!ctx) {
+            return SSTV_NO_DEFAULT_ENCODERS;
+        }
     }
 
     /* initialize context */
     ctx->image = image;
     ctx->mode = mode;
     ctx->sample_rate = sample_rate;
+    ctx->state = SSTV_ENCODER_STATE_START;
+    ctx->fsk.phase = 0; /* start nicely from zero */
+    ctx->fsk.remaining_samples = 0; /* so we get initial state change */
 
     /* set output */
     *out_ctx = ctx;
@@ -118,7 +150,108 @@ sstv_delete_encoder(void *ctx)
     return SSTV_OK;
 }
 
-sstv_error_t
-sstv_encode(void *ctx, uint8_t *buffer, size_t buffer_size)
+static sstv_error_t
+sstv_encode_pd_state_change(sstv_encoder_context_t *context)
 {
+    /* done */
+    return SSTV_OK;
+}
+
+static sstv_error_t
+sstv_encode_state_change(sstv_encoder_context_t *context)
+{
+    /* leader tone #1 */
+    if (context->state == SSTV_ENCODER_STATE_START) {
+        context->state = SSTV_ENCODER_STATE_LEADER_TONE_1;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ(1900, context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(300000, context->sample_rate);
+        return SSTV_OK;
+    }
+
+    /* break */
+    if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_1) {
+        context->state = SSTV_ENCODER_STATE_BREAK;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(10000, context->sample_rate);
+        return SSTV_OK;
+    }
+
+    /* leader tone #2 */
+    if (context->state == SSTV_ENCODER_STATE_BREAK) {
+        context->state = SSTV_ENCODER_STATE_LEADER_TONE_2;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ(1900, context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(300000, context->sample_rate);
+        return SSTV_OK;
+    }
+
+    /* debug */
+    context->state = SSTV_ENCODER_STATE_END;
+    return SSTV_OK;
+
+    /* call state change routine for specific mode */
+    switch (context->mode) {
+        /* PD modes */
+        case SSTV_MODE_PD90:
+        case SSTV_MODE_PD120:
+        case SSTV_MODE_PD160:
+        case SSTV_MODE_PD180:
+        case SSTV_MODE_PD240:
+            return sstv_encode_pd_state_change(context);
+
+        default:
+            return SSTV_BAD_MODE;
+    }
+}
+
+sstv_error_t
+sstv_encode(void *ctx, sstv_signal_t *signal)
+{
+    sstv_error_t rc;
+    sstv_encoder_context_t *context = (sstv_encoder_context_t *)ctx;
+
+    if (!context || !signal) {
+        return SSTV_BAD_PARAMETER;
+    }
+
+    /* reset signal container */
+    signal->count = 0;
+
+    /* main encoding loop */
+    while (1) {
+        /* state change? */
+        if (context->fsk.remaining_samples == 0) {
+            rc = sstv_encode_state_change(context);
+            if (rc != SSTV_OK) {
+                return rc;
+            }
+
+            /* end of encoding? */
+            if (context->state == SSTV_ENCODER_STATE_END) {
+                return SSTV_ENCODE_END;
+            }
+            continue;
+        }
+
+        /* end of buffer? */
+        if (signal->count == signal->capacity) {
+            return SSTV_ENCODE_SUCCESSFUL;
+        }
+
+        /* encode sample and continue */
+        context->fsk.remaining_samples --;
+        context->fsk.phase += context->fsk.phase_delta;
+        switch(signal->type) {
+            case SSTV_SAMPLE_INT8:
+                ((int8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT8[context->fsk.phase >> 6];
+                break;
+
+            case SSTV_SAMPLE_INT16:
+                ((int16_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT16[context->fsk.phase >> 6];
+                break;
+            
+            default:
+                return SSTV_BAD_SAMPLE_TYPE;
+        }
+        signal->count ++;
+    }
 }
