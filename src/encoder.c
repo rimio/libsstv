@@ -20,9 +20,22 @@
  */
 typedef enum {
     SSTV_ENCODER_STATE_START,
+
     SSTV_ENCODER_STATE_LEADER_TONE_1,
     SSTV_ENCODER_STATE_BREAK,
     SSTV_ENCODER_STATE_LEADER_TONE_2,
+
+    SSTV_ENCODER_STATE_VIS_START_BIT = 99,
+    SSTV_ENCODER_STATE_VIS_BIT0 = 100,
+    SSTV_ENCODER_STATE_VIS_BIT1 = 101,
+    SSTV_ENCODER_STATE_VIS_BIT2 = 102,
+    SSTV_ENCODER_STATE_VIS_BIT3 = 103,
+    SSTV_ENCODER_STATE_VIS_BIT4 = 104,
+    SSTV_ENCODER_STATE_VIS_BIT5 = 105,
+    SSTV_ENCODER_STATE_VIS_BIT6 = 106,
+    SSTV_ENCODER_STATE_VIS_BIT7 = 107,
+    SSTV_ENCODER_STATE_VIS_STOP_BIT,
+
     SSTV_ENCODER_STATE_END
 } sstv_encoder_state_t;
 
@@ -184,6 +197,35 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         return SSTV_OK;
     }
 
+    /* VIS start bit */
+    if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_2) {
+        context->state = SSTV_ENCODER_STATE_VIS_START_BIT;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        return SSTV_OK;
+    }
+
+    /* VIS bits */
+    if ((context->state >= SSTV_ENCODER_STATE_VIS_START_BIT)
+        && (context->state < SSTV_ENCODER_STATE_VIS_BIT7))
+    {
+        uint8_t visp = sstv_get_visp_code(context->mode);
+        uint8_t bit = visp >> (context->state - SSTV_ENCODER_STATE_VIS_START_BIT) & 0x1;
+
+        context->state ++;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ((bit ? 1100 : 1300), context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        return SSTV_OK;
+    }
+
+    /* VIS stop bit */
+    if (context->state == SSTV_ENCODER_STATE_VIS_BIT7) {
+        context->state = SSTV_ENCODER_STATE_VIS_STOP_BIT;
+        context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
+        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        return SSTV_OK;
+    }
+
     /* debug */
     context->state = SSTV_ENCODER_STATE_END;
     return SSTV_OK;
@@ -243,6 +285,10 @@ sstv_encode(void *ctx, sstv_signal_t *signal)
         switch(signal->type) {
             case SSTV_SAMPLE_INT8:
                 ((int8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT8[context->fsk.phase >> 6];
+                break;
+            
+            case SSTV_SAMPLE_UINT8:
+                ((uint8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_UINT8[context->fsk.phase >> 6];
                 break;
 
             case SSTV_SAMPLE_INT16:

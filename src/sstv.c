@@ -176,6 +176,7 @@ sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, size_t capacity, v
 
     switch(type) {
         case SSTV_SAMPLE_INT8:
+        case SSTV_SAMPLE_UINT8:
             sig->size = capacity;
             break;
 
@@ -194,4 +195,28 @@ sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, size_t capacity, v
 
     /* done */
     return SSTV_OK;
+}
+
+uint8_t
+sstv_get_visp_code(sstv_mode_t mode)
+{
+    switch (mode) {
+        case SSTV_MODE_PD90:
+            return 99;
+
+        case SSTV_MODE_PD120:
+            return 95;
+
+        case SSTV_MODE_PD160:
+            return 226;
+
+        case SSTV_MODE_PD180:
+            return 96;
+
+        case SSTV_MODE_PD240:
+            return 225;
+
+        default:
+            return 0;
+    }
 }

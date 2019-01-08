@@ -12,6 +12,8 @@
 #include <stddef.h>
 
 extern int8_t SSTV_SIN_INT10_INT8[1024];
+extern uint8_t SSTV_SIN_INT10_UINT8[1024];
+
 extern int16_t SSTV_SIN_INT10_INT16[1024];
 
 #endif

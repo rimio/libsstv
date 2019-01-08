@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <malloc.h>
+#include <sndfile.h>
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -23,6 +24,7 @@ extern "C" {
 DEFINE_bool(logtostderr, false, "Only log to stderr");
 DEFINE_string(mode, "", "SSTV mode for encoder");
 DEFINE_string(input, "", "input image");
+DEFINE_string(output, "", "output WAV file");
 DEFINE_uint64(sample_rate, 48000, "output audio sample rate");
 
 int main(int argc, char **argv)
@@ -37,6 +39,9 @@ int main(int argc, char **argv)
     /* check input */
     if (FLAGS_input == "") {
         LOG(FATAL) << "Input image filename not provided, use --input";
+    }
+    if (FLAGS_output == "") {
+        LOG(FATAL) << "Output WAV file not provided, use --output";
     }
     if (FLAGS_mode == "") {
         LOG(FATAL) << "Encoding mode not provided, use --mode";
@@ -55,9 +60,9 @@ int main(int argc, char **argv)
     }
 
     /* create a sample buffer for output */
-    int8_t samp_buffer[128 * 1024];
+    uint8_t samp_buffer[128 * 1024];
     sstv_signal_t signal;
-    if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT8, 128 * 1024, samp_buffer) != SSTV_OK) {
+    if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT16, 128 * 1024, samp_buffer) != SSTV_OK) {
         LOG(FATAL) << "sstv_pack_signal() failed";
     }
 
@@ -77,6 +82,16 @@ int main(int argc, char **argv)
         LOG(FATAL) << "NULL encoder received";
     }
 
+    /* open WAV file */
+    SF_INFO wavinfo;
+    wavinfo.samplerate = FLAGS_sample_rate;
+    wavinfo.channels = 1;
+    wavinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+    SNDFILE *wavfile = sf_open(FLAGS_output.c_str(), SFM_WRITE, &wavinfo);
+    if (!wavfile) {
+        LOG(FATAL) << "sf_open() failed: " << sf_strerror(NULL);
+    }
+
     /* encode */
     while (true) {
         /* encode block */
@@ -85,17 +100,17 @@ int main(int argc, char **argv)
             LOG(FATAL) << "sstv_encode() failed with rc " << rc;
         }
 
-        /* DEBUG: print block as csv */
-        for (size_t i=0; i < signal.count; i ++) {
-            std::cout << (int)((int8_t *)signal.buffer)[i] << std::endl;
-        }
-        std::cout << std::endl << std::endl;
+        /* write to sound file */
+        sf_write_short(wavfile, (int16_t *)signal.buffer, signal.count);
 
         /* exit case */
         if (rc == SSTV_ENCODE_END) {
             break;
         }
     }
+
+    /* close wav file */
+    sf_close(wavfile);
 
     /* cleanup */
     LOG(INFO) << "Cleaning up";

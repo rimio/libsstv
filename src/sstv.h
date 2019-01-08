@@ -16,4 +16,10 @@
 extern sstv_malloc_t sstv_malloc_user;
 extern sstv_free_t sstv_free_user;
 
+/*
+ * Utility functions
+ */
+extern uint8_t
+sstv_get_visp_code(sstv_mode_t mode);
+
 #endif

@@ -21,6 +21,12 @@ for s in sn * 127:
     f.write(str(int(np.around(s))) + ', ')
 f.write('};\n\n')
 
+# SSTV_SIN_INT10_UINT8
+f.write('uint8_t SSTV_SIN_INT10_UINT8[1024] = { ')
+for s in (sn + 1) / 2 * 255:
+    f.write(str(int(np.around(s))) + ', ')
+f.write('};\n\n')
+
 # SSTV_SIN_INT10_INT16
 f.write('int16_t SSTV_SIN_INT10_INT16[1024] = { ')
 for s in sn * 32767:

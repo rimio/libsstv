@@ -102,6 +102,7 @@ typedef struct {
  * Signal sample type
  */
 typedef enum {
+    SSTV_SAMPLE_UINT8,
     SSTV_SAMPLE_INT8,
     SSTV_SAMPLE_INT16
 } sstv_sample_type_t;
