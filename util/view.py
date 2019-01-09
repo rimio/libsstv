@@ -17,10 +17,10 @@ if spf.getnchannels() == 2:
     print('Just mono files')
     sys.exit(0)
 
-#plt.figure(1)
-#plt.title('Signal Wave...')
-#plt.plot(signal)
-#plt.show()
+plt.figure(1)
+plt.title('Signal Wave...')
+plt.plot(signal)
+plt.show()
 
 plt.specgram(signal, Fs=48000)
 plt.show()

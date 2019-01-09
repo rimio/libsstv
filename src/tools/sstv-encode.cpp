@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 
         /* write to sound file */
         sf_write_short(wavfile, (int16_t *)signal.buffer, signal.count);
+        LOG(INFO) << "Written " << signal.count << " samples";
 
         /* exit case */
         if (rc == SSTV_ENCODE_END) {
