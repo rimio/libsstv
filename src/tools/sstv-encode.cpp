@@ -7,11 +7,11 @@
 
 #include <iostream>
 #include <malloc.h>
-#include <sndfile.h>
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
-#include "cimg/CImg.h"
+#include <Magick++.h> 
+#include <sndfile.h>
 
 extern "C" {
 #include <libsstv.h>
@@ -50,12 +50,62 @@ int main(int argc, char **argv)
     /* TODO: parse SSTV mode */
     sstv_mode_t mode = SSTV_MODE_PD120;
 
-    /* load image from file (TODO: perform normalization from source to desired properties) */
+    /* get image properties for chosen mode */
+    size_t width, height;
+    sstv_image_format_t format;
+    if (sstv_get_mode_image_props(mode, &width, &height, &format) != SSTV_OK) {
+        LOG(FATAL) << "sstv_get_mode_image_props() failed";
+    }
+
+    /* load image from file */
     LOG(INFO) << "Loading image from " << FLAGS_input;
-    cimg_library::CImg<unsigned char> input_image = (cimg_library::CImg<>(FLAGS_input.c_str())).RGBtoYCbCr();
+
+    Magick::Image image;
+    std::string map = "";
+    uint8_t *image_buffer = NULL;
+
+    try {
+        /* load from file */
+        image.read(FLAGS_input);
+
+        /* resize */
+        LOG(INFO) << "Resizing to " << width << "x"<<height;
+        Magick::Geometry nsize(width, height);
+        nsize.aspect(true);
+        image.scale(nsize);
+
+        /* format */
+        //format = SSTV_FORMAT_Y;
+        switch (format) {
+            case SSTV_FORMAT_Y:
+                map = "R";
+                image.magick("Y");
+                break;
+
+            case SSTV_FORMAT_YCBCR:
+                map = "RGB";
+                image.colorSpace(Magick::YCbCrColorspace);
+                break;
+
+            case SSTV_FORMAT_RGB:
+                map = "RGB";
+                image.colorSpace(Magick::RGBColorspace);
+                break;
+
+            default:
+                LOG(FATAL) << "Unknown pixel format";
+                break;
+        }
+    } catch (int e) {
+        LOG(FATAL) << "Magick++ failed";
+    }
+
+    /* get raw */
+    Magick::PixelData blob(image, map, Magick::CharPixel);
+    image_buffer = (uint8_t *)blob.data();
 
     sstv_image_t sstv_image;
-    if (sstv_pack_image(&sstv_image, input_image.width(), input_image.height(), SSTV_FORMAT_YCBCR, input_image.data()) != SSTV_OK) {
+    if (sstv_pack_image(&sstv_image, width, height, format, image_buffer) != SSTV_OK) {
         LOG(FATAL) << "sstv_pack_image() failed";
     }
 

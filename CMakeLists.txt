@@ -43,22 +43,20 @@ set (ENCODE_TOOL_SOURCES
 )
 
 # Dependencies
-find_library (GLOG_LIBRARY glog)
-find_library (LIQUID_LIBRARY liquid)
-find_package (gflags REQUIRED)
-find_package (X11 REQUIRED)
+find_library(GLOG_LIBRARY glog)
+find_package(gflags REQUIRED)
+find_package(ImageMagick COMPONENTS Magick++)
 
 # Library (C compiler)
 add_library (${PROJECT_NAME} SHARED ${LIB_SOURCES})
 set_property (TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE C)
 target_include_directories (${PROJECT_NAME} PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
-target_link_libraries (${PROJECT_NAME} liquid)
 
 # Tools (C++ compiler)
 if (BUILD_TOOLS)
   add_executable (${PROJECT_NAME}-encode ${ENCODE_TOOL_SOURCES})
   set_property (TARGET ${PROJECT_NAME}-encode PROPERTY LINKER_LANGUAGE CXX)
   set_property (TARGET ${PROJECT_NAME}-encode PROPERTY CXX_STANDARD 14)
-  target_include_directories(${PROJECT_NAME}-encode PUBLIC "${SRC_DIR}/tools" PUBLIC "${INCLUDE_DIR}")
-  target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME} glog gflags X11 sndfile)
+  target_include_directories(${PROJECT_NAME}-encode PUBLIC "${SRC_DIR}/tools" PUBLIC "${INCLUDE_DIR}" PUBLIC "${ImageMagick_INCLUDE_DIRS}")
+  target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME} glog gflags sndfile ${ImageMagick_LIBRARIES})
 endif (BUILD_TOOLS)
