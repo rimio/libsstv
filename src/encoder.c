@@ -12,8 +12,8 @@
 /*
  * Computation helpers
  */
-#define REMAINING_SAMPLES_US(time_us, sample_rate) ((uint64_t)(time_us) * (uint64_t)(sample_rate) / 1000000)
-#define DPHASE_FROM_FREQ(freq, sample_rate) ((uint64_t)(freq) * 65536 / (uint64_t)(sample_rate))
+#define MILLISAMPLES_FROM_MICROSECONDS(time_us, sample_rate) ((uint64_t)(time_us) * (uint64_t)(sample_rate) / 1000)
+#define DPHASE_FROM_FREQ(freq, sample_rate) ((((uint64_t)(freq)) << 32) / (uint64_t)(sample_rate))
 
 /*
  * Encoder state
@@ -63,8 +63,8 @@ typedef struct {
 
     /* current FSK value to be written */
     struct {
-        uint16_t phase;
-        uint16_t phase_delta;
+        uint32_t phase;
+        uint32_t phase_delta;
         size_t remaining_samples;
     } fsk;
 
@@ -191,7 +191,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
         context->state = SSTV_ENCODER_STATE_SYNC;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(20000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(20000, context->sample_rate);
         context->extra.scan.curr_line = 0;
         return SSTV_OK;
     }
@@ -203,7 +203,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
     {
         context->state = SSTV_ENCODER_STATE_SYNC;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(20000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(20000, context->sample_rate);
         context->extra.scan.curr_line += 2;
         return SSTV_OK;
     }
@@ -212,7 +212,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_SYNC) {
         context->state = SSTV_ENCODER_STATE_PORCH;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1500, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(2080, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(2080, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -230,7 +230,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         size_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
         uint8_t y = context->image.buffer[pix_offset * 3];
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1500 + y * 800 / 255, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(190, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(190, context->sample_rate);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -253,7 +253,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         uint8_t r2 = context->image.buffer[pix_offset_l1 * 3 + 2];
         uint8_t r = (r1 + r2) / 2;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1500 + r * 800 / 255, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(190, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(190, context->sample_rate);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -276,7 +276,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         uint8_t b2 = context->image.buffer[pix_offset_l1 * 3 + 1];
         uint8_t b = (b1 + b2) / 2;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1500 + b * 800 / 255, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(190, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(190, context->sample_rate);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -296,7 +296,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         size_t pix_offset = context->image.width * (context->extra.scan.curr_line + 1) + context->extra.scan.curr_col;
         uint8_t y = context->image.buffer[pix_offset * 3];
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1500 + y * 800 / 255, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(190, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(190, context->sample_rate);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -314,7 +314,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_START) {
         context->state = SSTV_ENCODER_STATE_LEADER_TONE_1;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1900, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(300000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(300000, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -322,7 +322,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_1) {
         context->state = SSTV_ENCODER_STATE_BREAK;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(10000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(10000, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -330,7 +330,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_BREAK) {
         context->state = SSTV_ENCODER_STATE_LEADER_TONE_2;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1900, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(300000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(300000, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -338,7 +338,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_2) {
         context->state = SSTV_ENCODER_STATE_VIS_START_BIT;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(30000, context->sample_rate);
         context->extra.vis.visp = sstv_get_visp_code(context->mode);
         context->extra.vis.curr_bit = 0;
         return SSTV_OK;
@@ -352,7 +352,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         context->state = SSTV_ENCODER_STATE_VIS_BIT;
         context->extra.vis.curr_bit ++;
         context->fsk.phase_delta = DPHASE_FROM_FREQ((bit ? 1100 : 1300), context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(30000, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -360,7 +360,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_VIS_BIT) {
         context->state = SSTV_ENCODER_STATE_VIS_STOP_BIT;
         context->fsk.phase_delta = DPHASE_FROM_FREQ(1200, context->sample_rate);
-        context->fsk.remaining_samples = REMAINING_SAMPLES_US(30000, context->sample_rate);
+        context->fsk.remaining_samples += MILLISAMPLES_FROM_MICROSECONDS(30000, context->sample_rate);
         return SSTV_OK;
     }
 
@@ -395,7 +395,7 @@ sstv_encode(void *ctx, sstv_signal_t *signal)
     /* main encoding loop */
     while (1) {
         /* state change? */
-        if (context->fsk.remaining_samples == 0) {
+        if (context->fsk.remaining_samples < 1000) {
             rc = sstv_encode_state_change(context);
             if (rc != SSTV_OK) {
                 return rc;
@@ -405,6 +405,13 @@ sstv_encode(void *ctx, sstv_signal_t *signal)
             if (context->state == SSTV_ENCODER_STATE_END) {
                 return SSTV_ENCODE_END;
             }
+
+            /* make sure we don't skip a state */
+            if (context->fsk.remaining_samples < 1000) {
+                /* this should not happen for a proper sample rate */
+                return SSTV_INTERNAL_ERROR;
+            }
+
             continue;
         }
 
@@ -414,19 +421,19 @@ sstv_encode(void *ctx, sstv_signal_t *signal)
         }
 
         /* encode sample and continue */
-        context->fsk.remaining_samples --;
+        context->fsk.remaining_samples -= 1000;
         context->fsk.phase += context->fsk.phase_delta;
         switch(signal->type) {
             case SSTV_SAMPLE_INT8:
-                ((int8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT8[context->fsk.phase >> 6];
+                ((int8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT8[context->fsk.phase >> 22];
                 break;
             
             case SSTV_SAMPLE_UINT8:
-                ((uint8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_UINT8[context->fsk.phase >> 6];
+                ((uint8_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_UINT8[context->fsk.phase >> 22];
                 break;
 
             case SSTV_SAMPLE_INT16:
-                ((int16_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT16[context->fsk.phase >> 6];
+                ((int16_t *)signal->buffer)[signal->count] = SSTV_SIN_INT10_INT16[context->fsk.phase >> 22];
                 break;
             
             default:

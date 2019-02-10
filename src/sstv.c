@@ -21,8 +21,12 @@
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
 
+/*
+ * User-defined memory allocation functions
+ */
 sstv_malloc_t sstv_malloc_user = NULL;
 sstv_free_t sstv_free_user = NULL;
+
 
 sstv_error_t
 sstv_init(sstv_malloc_t alloc_func, sstv_free_t dealloc_func)
