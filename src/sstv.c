@@ -6,6 +6,20 @@
  */
 
 #include "libsstv.h"
+#include "sstv.h"
+
+/*
+ * Colorspace conversion macros
+ * Kudos to Leszek Szary
+ * https://stackoverflow.com/questions/1737726/how-to-perform-rgb-yuv-conversion-in-c-c
+ */
+#define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
+#define CRGB2Y(R, G, B) CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16)
+#define CRGB2Cb(R, G, B) CLIP((36962 * (B - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+#define CRGB2Cr(R, G, B) CLIP((46727 * (R - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+#define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
+#define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
+#define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
 
 sstv_malloc_t sstv_malloc_user = NULL;
 sstv_free_t sstv_free_user = NULL;
@@ -21,6 +35,114 @@ sstv_init(sstv_malloc_t alloc_func, sstv_free_t dealloc_func)
     /* Keep user functions for allocation/deallocation */
     sstv_malloc_user = alloc_func;
     sstv_free_user = dealloc_func;
+    return SSTV_OK;
+}
+
+sstv_error_t
+sstv_convert_image(sstv_image_t *img, sstv_image_format_t format)
+{
+    if (!img) {
+        return SSTV_BAD_PARAMETER;
+    }
+
+    if (img->format == format) {
+        /* no conversion necessary */
+        return SSTV_OK;
+    }
+
+    if (img->format == SSTV_FORMAT_Y) {
+        /* can't convert from grayscale to anything */
+        return SSTV_UNSUPPORTED_CONVERSION;
+    }
+
+    /* perform conversion */
+    uint32_t num_px = img->width * img->height;
+    uint32_t i;
+    switch (format) {
+        case SSTV_FORMAT_Y:
+            {
+                switch (img->format) {
+                    case SSTV_FORMAT_Y:
+                        /* identity, do nothing */
+                        break;
+                    
+                    case SSTV_FORMAT_YCBCR:
+                        /* condense first channel */
+                        for (i = 0; i < num_px; i ++) {
+                            img->buffer[i] = img->buffer[i * 3];
+                        }
+                        break;
+                    
+                    case SSTV_FORMAT_RGB:
+                        /* extract Y from RGB and set as first channel */
+                        for (i = 0; i < num_px; i ++) {
+                            int32_t r = img->buffer[i * 3 + 0];
+                            int32_t g = img->buffer[i * 3 + 1];
+                            int32_t b = img->buffer[i * 3 + 2];
+                            img->buffer[i] = CRGB2Y(r, g, b);
+                        }
+                        break;
+
+                    default:
+                        return SSTV_UNSUPPORTED_CONVERSION;
+                }
+            }
+            break;
+        
+        case SSTV_FORMAT_YCBCR:
+            {
+                switch (img->format) {
+                    case SSTV_FORMAT_YCBCR:
+                        /* identity, do nothing */
+                        break;
+                    
+                    case SSTV_FORMAT_RGB:
+                        for (i = 0; i < num_px; i ++) {
+                            int32_t r = img->buffer[i * 3 + 0];
+                            int32_t g = img->buffer[i * 3 + 1];
+                            int32_t b = img->buffer[i * 3 + 2];
+                            img->buffer[i * 3 + 0] = CRGB2Y(r, g, b);
+                            img->buffer[i * 3 + 1] = CRGB2Cb(r, g, b);
+                            img->buffer[i * 3 + 2] = CRGB2Cr(r, g, b);
+                        }
+                        break;
+
+                    default:
+                        return SSTV_UNSUPPORTED_CONVERSION;
+                }
+            }
+            break;
+        
+        case SSTV_FORMAT_RGB:
+            {
+                switch (img->format) {
+                    case SSTV_FORMAT_YCBCR:
+                        for (i = 0; i < num_px; i ++) {
+                            int32_t y = img->buffer[i * 3 + 0];
+                            int32_t b = img->buffer[i * 3 + 1];
+                            int32_t r = img->buffer[i * 3 + 2];
+                            img->buffer[i * 3 + 0] = CYCbCr2R(y, b ,r);
+                            img->buffer[i * 3 + 1] = CYCbCr2G(y, b ,r);
+                            img->buffer[i * 3 + 2] = CYCbCr2B(y, b ,r);
+                        }
+                        break;
+                    
+                    case SSTV_FORMAT_RGB:
+                        /* identity, do nothing */
+                        break;
+
+                    default:
+                        return SSTV_UNSUPPORTED_CONVERSION;
+                }
+            }
+            break;
+
+        default:
+            return SSTV_BAD_FORMAT;
+    }
+
+    /* all ok */
+    img->format = format;
     return SSTV_OK;
 }
 

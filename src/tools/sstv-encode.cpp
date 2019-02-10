@@ -61,7 +61,6 @@ int main(int argc, char **argv)
     LOG(INFO) << "Loading image from " << FLAGS_input;
 
     Magick::Image image;
-    std::string map = "";
     uint8_t *image_buffer = NULL;
 
     try {
@@ -73,40 +72,24 @@ int main(int argc, char **argv)
         Magick::Geometry nsize(width, height);
         nsize.aspect(true);
         image.scale(nsize);
-
-        /* format */
-        //format = SSTV_FORMAT_Y;
-        switch (format) {
-            case SSTV_FORMAT_Y:
-                map = "R";
-                image.magick("Y");
-                break;
-
-            case SSTV_FORMAT_YCBCR:
-                map = "RGB";
-                image.colorSpace(Magick::YCbCrColorspace);
-                break;
-
-            case SSTV_FORMAT_RGB:
-                map = "RGB";
-                image.colorSpace(Magick::RGBColorspace);
-                break;
-
-            default:
-                LOG(FATAL) << "Unknown pixel format";
-                break;
-        }
     } catch (int e) {
         LOG(FATAL) << "Magick++ failed";
     }
 
-    /* get raw */
-    Magick::PixelData blob(image, map, Magick::CharPixel);
+    /* get raw RGB (and convert it if necessary) */
+    image.colorSpace(Magick::RGBColorspace);
+    Magick::PixelData blob(image, "RGB", Magick::CharPixel);
     image_buffer = (uint8_t *)blob.data();
 
     sstv_image_t sstv_image;
-    if (sstv_pack_image(&sstv_image, width, height, format, image_buffer) != SSTV_OK) {
+    if (sstv_pack_image(&sstv_image, width, height, SSTV_FORMAT_RGB, image_buffer) != SSTV_OK) {
+        LOG(INFO) << image_buffer;
         LOG(FATAL) << "sstv_pack_image() failed";
+    }
+
+    /* convert to mode's colorspace */
+    if (sstv_convert_image(&sstv_image, format) != SSTV_OK) {
+        LOG(FATAL) << "sstv_convert_image() failed";
     }
 
     /* create a sample buffer for output */

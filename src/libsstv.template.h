@@ -43,6 +43,7 @@ typedef enum {
     SSTV_BAD_FORMAT             = 105,
     SSTV_BAD_RESOLUTION         = 106,
     SSTV_BAD_SAMPLE_TYPE        = 107,
+    SSTV_UNSUPPORTED_CONVERSION = 108,
 
     SSTV_ALLOC_FAIL             = 200,
 
@@ -178,6 +179,28 @@ extern sstv_error_t sstv_create_image_from_mode(sstv_image_t *out_img, sstv_mode
 extern sstv_error_t sstv_create_image_from_props(sstv_image_t *out_img, size_t w, size_t h, sstv_image_format_t format);
 
 /*
+ * Deletes an image.
+ *   img(in): pointer to an image structure to delete
+ *   returns: error code
+ *
+ * NOTE: This function deallocates the pixel buffer, so it requires a valid
+ * call to sstv_init().
+ */
+extern sstv_error_t sstv_delete_image(sstv_image_t *img);
+
+/*
+ * Converts an image.
+ *   img(in): pointer to an image structure
+ *   format(in): format to convert image to
+ *   returns: error code
+ *
+ * NOTE: Conversions _from_ SSTV_FORMAT_Y to any format are NOT supported,
+ * since the conversion is performed in-place and extra memory would be
+ * required.
+ */
+extern sstv_error_t sstv_convert_image(sstv_image_t *img, sstv_image_format_t format);
+
+/*
  * Pack an image into an image structure, given properties and buffer.
  *   out_img(out): pointer to an image structure to initialize
  *   width(in): width
@@ -190,16 +213,6 @@ extern sstv_error_t sstv_create_image_from_props(sstv_image_t *out_img, size_t w
  * resulting image.
  */
 extern sstv_error_t sstv_pack_image(sstv_image_t *out_img, size_t width, size_t height, sstv_image_format_t format, uint8_t *buffer);
-
-/*
- * Deletes an image.
- *   img(img): pointer to an image structure to delete
- *   returns: error code
- *
- * NOTE: This function deallocates the pixel buffer, so it requires a valid
- * call to sstv_init().
- */
-extern sstv_error_t sstv_delete_image(sstv_image_t *img);
 
 /*
  * Pack a signal buffer into a signal structure.
