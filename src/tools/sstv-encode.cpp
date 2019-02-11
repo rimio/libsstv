@@ -13,19 +13,39 @@
 #include <Magick++.h> 
 #include <sndfile.h>
 
-extern "C" {
 #include <libsstv.h>
-}
 
 /*
  * Command line flags
  */
-
 DEFINE_bool(logtostderr, false, "Only log to stderr");
 DEFINE_string(mode, "", "SSTV mode for encoder");
 DEFINE_string(input, "", "input image");
 DEFINE_string(output, "", "output WAV file");
 DEFINE_uint64(sample_rate, 48000, "output audio sample rate");
+
+sstv_mode_t mode_from_string(std::string mode)
+{
+    std::transform(mode.begin(), mode.end(), mode.begin(), ::toupper);
+
+    if (mode == "PD50") {
+        return SSTV_MODE_PD50;
+    } else if (mode == "PD90") {
+        return SSTV_MODE_PD90;
+    } else if (mode == "PD120") {
+        return SSTV_MODE_PD120;
+    } else if (mode == "PD160") {
+        return SSTV_MODE_PD160;
+    } else if (mode == "PD180") {
+        return SSTV_MODE_PD180;
+    } else if (mode == "PD240") {
+        return SSTV_MODE_PD240;
+    } else if (mode == "PD290") {
+        return SSTV_MODE_PD290;
+    } else {
+        LOG(FATAL) << "Unknown mode '" << mode << "'";
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -48,10 +68,10 @@ int main(int argc, char **argv)
     }
 
     /* TODO: parse SSTV mode */
-    sstv_mode_t mode = SSTV_MODE_PD120;
+    sstv_mode_t mode = mode_from_string(FLAGS_mode);
 
     /* get image properties for chosen mode */
-    size_t width, height;
+    uint32_t width, height;
     sstv_image_format_t format;
     if (sstv_get_mode_image_props(mode, &width, &height, &format) != SSTV_OK) {
         LOG(FATAL) << "sstv_get_mode_image_props() failed";

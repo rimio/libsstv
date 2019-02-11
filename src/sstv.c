@@ -151,10 +151,16 @@ sstv_convert_image(sstv_image_t *img, sstv_image_format_t format)
 }
 
 sstv_error_t
-sstv_get_mode_image_props(sstv_mode_t mode, size_t *width, size_t *height, sstv_image_format_t *format)
+sstv_get_mode_image_props(sstv_mode_t mode, uint32_t *width, uint32_t *height, sstv_image_format_t *format)
 {
     switch (mode) {
         /* PD modes */
+        case SSTV_MODE_PD50:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+
         case SSTV_MODE_PD90:
             if (width) *width = 320;
             if (height) *height = 256;
@@ -185,6 +191,12 @@ sstv_get_mode_image_props(sstv_mode_t mode, size_t *width, size_t *height, sstv_
             if (format) *format = SSTV_FORMAT_YCBCR;
             break;
 
+        case SSTV_MODE_PD290:
+            if (width) *width = 800;
+            if (height) *height = 616;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+
         default:
             return SSTV_BAD_MODE;
     }
@@ -195,7 +207,7 @@ sstv_get_mode_image_props(sstv_mode_t mode, size_t *width, size_t *height, sstv_
 sstv_error_t
 sstv_create_image_from_mode(sstv_image_t *out_img, sstv_mode_t mode)
 {
-    size_t w, h;
+    uint32_t w, h;
     sstv_image_format_t fmt;
     sstv_error_t rc;
 
@@ -208,9 +220,9 @@ sstv_create_image_from_mode(sstv_image_t *out_img, sstv_mode_t mode)
 }
 
 sstv_error_t
-sstv_create_image_from_props(sstv_image_t *out_img, size_t w, size_t h, sstv_image_format_t format)
+sstv_create_image_from_props(sstv_image_t *out_img, uint32_t w, uint32_t h, sstv_image_format_t format)
 {
-    size_t bsize;
+    uint32_t bsize;
 
     if (!out_img) {
         return SSTV_BAD_PARAMETER;
@@ -255,7 +267,7 @@ sstv_create_image_from_props(sstv_image_t *out_img, size_t w, size_t h, sstv_ima
 }
 
 sstv_error_t
-sstv_pack_image(sstv_image_t *out_img, size_t width, size_t height, sstv_image_format_t format, uint8_t *buffer)
+sstv_pack_image(sstv_image_t *out_img, uint32_t width, uint32_t height, sstv_image_format_t format, uint8_t *buffer)
 {
     if (!out_img || !buffer) {
         return SSTV_BAD_PARAMETER;
@@ -294,7 +306,7 @@ sstv_delete_image(sstv_image_t *img)
 }
 
 sstv_error_t
-sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, size_t capacity, void *buffer)
+sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, uint32_t capacity, void *buffer)
 {
     if (!sig) {
         return SSTV_BAD_PARAMETER;
@@ -327,6 +339,9 @@ uint8_t
 sstv_get_visp_code(sstv_mode_t mode)
 {
     switch (mode) {
+        case SSTV_MODE_PD50:
+            return 221;
+
         case SSTV_MODE_PD90:
             return 99;
 
@@ -341,6 +356,9 @@ sstv_get_visp_code(sstv_mode_t mode)
 
         case SSTV_MODE_PD240:
             return 225;
+
+        case SSTV_MODE_PD290:
+            return 222;
 
         default:
             return 0;
