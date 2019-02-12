@@ -10,40 +10,17 @@
 #include "luts.h"
 
 /*
- * Frequencies (all expressed in Hz)
+ * FSK helpers
  */
-#define LEADER_FREQ             1900
-#define BREAK_FREQ              1200
-
-#define VIS_START_STOP_FREQ     1200
-#define VIS_LOW_FREQ            1300
-#define VIS_HIGH_FREQ           1100
-
-#define SYNC_FREQ               1200
-#define PORCH_FREQ              1500
-
-#define DATA_BASE_FREQ          1500
-#define DATA_BANDWIDTH          800
-
-/*
- * Durations (useconds)
- */
-#define LEADER_TONE_USEC          300000
-#define BREAK_USEC                10000
-#define VIS_BIT_USEC              30000
-
-/*
- * Computation helpers
- */
-#define MICROSAMPLES_FROM_MICROSECONDS(time_us, sample_rate) ((uint64_t)(time_us) * (uint64_t)(sample_rate))
-#define DPHASE_FROM_FREQ(freq, sample_rate) ((((uint64_t)(freq)) << 32) / (uint64_t)(sample_rate))
-
-#define BYTE_TO_FREQ(b) (DATA_BASE_FREQ + (b) * DATA_BANDWIDTH / 255)
-
-#define FSK(ctx, usamples, freq) \
+#define FSK(ctx, time, freq) \
     { \
-        (ctx)->fsk.phase_delta = DPHASE_FROM_FREQ((freq), context->sample_rate); \
-        (ctx)->fsk.remaining_usamp += usamples; \
+        (ctx)->fsk.phase_delta = (freq).phase_delta; \
+        (ctx)->fsk.remaining_usamp += (time).usamp; \
+    }
+#define FSK_PIXEL(ctx, time, val) \
+    { \
+        (ctx)->fsk.phase_delta = (ctx)->descriptor.pixel.val_phase_delta[(val)]; \
+        (ctx)->fsk.remaining_usamp += (time).usamp; \
     }
 
 /*
@@ -100,11 +77,7 @@ typedef struct {
     } fsk;
 
     /* mode timings */
-    struct {
-        uint32_t sync_usamp;
-        uint32_t porch_usamp;
-        uint32_t pixel_usamp;
-    } timings;
+    sstv_mode_descriptor_t descriptor;
 
     /* state extra info */
     union {
@@ -186,60 +159,14 @@ sstv_create_encoder(void **out_ctx, sstv_image_t image, sstv_mode_t mode, uint32
     ctx->fsk.remaining_usamp = 0; /* so we get initial state change */
 
     /* initialize mode timings */
-    switch (mode) {
-        /*
-         * PD modes
-         */
-        case SSTV_MODE_PD50:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(286, sample_rate);
-            break;
-
-        case SSTV_MODE_PD90:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(532, sample_rate);
-            break;
-
-        case SSTV_MODE_PD120:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(190, sample_rate);
-            break;
-
-        case SSTV_MODE_PD160:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(382, sample_rate);
-            break;
-
-        case SSTV_MODE_PD180:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(286, sample_rate);
-            break;
-
-        case SSTV_MODE_PD240:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(382, sample_rate);
-            break;
-
-        case SSTV_MODE_PD290:
-            ctx->timings.sync_usamp = MICROSAMPLES_FROM_MICROSECONDS(20000, sample_rate);
-            ctx->timings.porch_usamp = MICROSAMPLES_FROM_MICROSECONDS(2080, sample_rate);
-            ctx->timings.pixel_usamp = MICROSAMPLES_FROM_MICROSECONDS(286, sample_rate);
-            break;
-
-        /*
-         * Invalid mode
-         */
-        default:
+    {
+        sstv_error_t rc = sstv_get_mode_descriptor(mode, sample_rate, &ctx->descriptor);
+        if (rc != SSTV_OK) {
             if (sstv_free_user) {
                 sstv_free_user(ctx);
             }
-            return SSTV_BAD_MODE;
+            return rc;
+        }
     }
 
     /* set output */
@@ -286,7 +213,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
         context->state = SSTV_ENCODER_STATE_SYNC;
         context->extra.scan.curr_line = 0;
-        FSK(context, context->timings.sync_usamp, SYNC_FREQ);
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
         return SSTV_OK;
     }
 
@@ -297,14 +224,14 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
     {
         context->state = SSTV_ENCODER_STATE_SYNC;
         context->extra.scan.curr_line += 2;
-        FSK(context, context->timings.sync_usamp, SYNC_FREQ);
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
         return SSTV_OK;
     }
 
     /* sync->porch */
     if (context->state == SSTV_ENCODER_STATE_SYNC) {
         context->state = SSTV_ENCODER_STATE_PORCH;
-        FSK(context, context->timings.porch_usamp, PORCH_FREQ);
+        FSK(context, context->descriptor.porch.time, context->descriptor.porch.freq);
         return SSTV_OK;
     }
 
@@ -321,7 +248,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
 
         uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
         uint8_t y = context->image.buffer[pix_offset * 3];
-        FSK(context, context->timings.pixel_usamp, BYTE_TO_FREQ(y));
+        FSK_PIXEL(context, context->descriptor.pixel.time, y);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -343,7 +270,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         uint8_t r1 = context->image.buffer[pix_offset_l0 * 3 + 2];
         uint8_t r2 = context->image.buffer[pix_offset_l1 * 3 + 2];
         uint8_t r = (r1 + r2) / 2;
-        FSK(context, context->timings.pixel_usamp, BYTE_TO_FREQ(r));
+        FSK_PIXEL(context, context->descriptor.pixel.time, r);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -365,7 +292,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         uint8_t b1 = context->image.buffer[pix_offset_l0 * 3 + 1];
         uint8_t b2 = context->image.buffer[pix_offset_l1 * 3 + 1];
         uint8_t b = (b1 + b2) / 2;
-        FSK(context, context->timings.pixel_usamp, BYTE_TO_FREQ(b));
+        FSK_PIXEL(context, context->descriptor.pixel.time, b);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -384,7 +311,7 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
 
         uint32_t pix_offset = context->image.width * (context->extra.scan.curr_line + 1) + context->extra.scan.curr_col;
         uint8_t y = context->image.buffer[pix_offset * 3];
-        FSK(context, context->timings.pixel_usamp, BYTE_TO_FREQ(y));
+        FSK_PIXEL(context, context->descriptor.pixel.time, y);
 
         context->extra.scan.curr_col ++;
         return SSTV_OK;
@@ -402,8 +329,8 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_START) {
         context->state = SSTV_ENCODER_STATE_LEADER_TONE_1;
         FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(LEADER_TONE_USEC, context->sample_rate),
-            LEADER_FREQ);
+            context->descriptor.leader_tone.time,
+            context->descriptor.leader_tone.freq);
         return SSTV_OK;
     }
 
@@ -411,8 +338,8 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_1) {
         context->state = SSTV_ENCODER_STATE_BREAK;
         FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(BREAK_USEC, context->sample_rate),
-            BREAK_FREQ);
+            context->descriptor.break_tone.time,
+            context->descriptor.break_tone.freq);
         return SSTV_OK;
     }
 
@@ -420,19 +347,19 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_BREAK) {
         context->state = SSTV_ENCODER_STATE_LEADER_TONE_2;
         FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(LEADER_TONE_USEC, context->sample_rate),
-            LEADER_FREQ);
+            context->descriptor.leader_tone.time,
+            context->descriptor.leader_tone.freq);
         return SSTV_OK;
     }
 
     /* VIS start bit */
     if (context->state == SSTV_ENCODER_STATE_LEADER_TONE_2) {
         context->state = SSTV_ENCODER_STATE_VIS_START_BIT;
-        FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(VIS_BIT_USEC, context->sample_rate),
-            VIS_START_STOP_FREQ);
         context->extra.vis.visp = sstv_get_visp_code(context->mode);
         context->extra.vis.curr_bit = 0;
+        FSK(context,
+            context->descriptor.vis.time,
+            context->descriptor.vis.sep_freq);
         return SSTV_OK;
     }
 
@@ -443,9 +370,15 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         uint8_t bit = (context->extra.vis.visp >> context->extra.vis.curr_bit) & 0x1;
         context->state = SSTV_ENCODER_STATE_VIS_BIT;
         context->extra.vis.curr_bit ++;
-        FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(VIS_BIT_USEC, context->sample_rate),
-            (bit ? VIS_HIGH_FREQ : VIS_LOW_FREQ));
+        if (bit) {
+            FSK(context,
+                context->descriptor.vis.time,
+                context->descriptor.vis.high_freq);
+        } else {
+            FSK(context,
+                context->descriptor.vis.time,
+                context->descriptor.vis.low_freq);
+        }
         return SSTV_OK;
     }
 
@@ -453,8 +386,8 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     if (context->state == SSTV_ENCODER_STATE_VIS_BIT) {
         context->state = SSTV_ENCODER_STATE_VIS_STOP_BIT;
         FSK(context,
-            MICROSAMPLES_FROM_MICROSECONDS(VIS_BIT_USEC, context->sample_rate),
-            VIS_START_STOP_FREQ);
+            context->descriptor.vis.time,
+            context->descriptor.vis.sep_freq);
         return SSTV_OK;
     }
 

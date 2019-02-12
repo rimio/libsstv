@@ -22,6 +22,12 @@
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
 
 /*
+ * Timings macros
+ */
+#define TIME_DESC_INIT(time_us, sample_rate) ((sstv_timing_desc_t){ (time_us), ((uint64_t)(time_us) * (uint64_t)(sample_rate)) })
+#define FREQ_DESC_INIT(freq, sample_rate) ((sstv_freq_desc_t){ (freq), ((((uint64_t)(freq)) << 32) / (uint64_t)(sample_rate)) })
+
+/*
  * User-defined memory allocation functions
  */
 sstv_malloc_t sstv_malloc_user = NULL;
@@ -363,4 +369,116 @@ sstv_get_visp_code(sstv_mode_t mode)
         default:
             return 0;
     }
+}
+
+sstv_error_t
+sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descriptor_t *desc)
+{
+    if (!desc) {
+        return SSTV_INTERNAL_ERROR;
+    }
+
+    /* Common desc and frequencies */
+    desc->leader_tone.time = TIME_DESC_INIT(300000, sample_rate);
+    desc->leader_tone.freq = FREQ_DESC_INIT(1900, sample_rate);
+
+    desc->break_tone.time = TIME_DESC_INIT(10000, sample_rate);
+    desc->break_tone.freq = FREQ_DESC_INIT(1200, sample_rate);
+
+    desc->vis.time = TIME_DESC_INIT(30000, sample_rate);
+    desc->vis.sep_freq = FREQ_DESC_INIT(1200, sample_rate);
+    desc->vis.low_freq = FREQ_DESC_INIT(1300, sample_rate);
+    desc->vis.high_freq = FREQ_DESC_INIT(1100, sample_rate);
+
+    /* Mode frequencies */
+    switch (mode) {
+        /*
+         * PD modes
+         */
+        case SSTV_MODE_PD50:
+        case SSTV_MODE_PD90:
+        case SSTV_MODE_PD120:
+        case SSTV_MODE_PD160:
+        case SSTV_MODE_PD180:
+        case SSTV_MODE_PD240:
+        case SSTV_MODE_PD290:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+
+        /*
+         * invalid mode
+         */
+        default:
+            return SSTV_BAD_MODE;
+    }
+
+    /* Mode desc */
+    switch (mode) {
+        /*
+         * PD modes
+         */
+        case SSTV_MODE_PD50:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            break;
+
+        case SSTV_MODE_PD90:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(532, sample_rate);
+            break;
+
+        case SSTV_MODE_PD120:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(190, sample_rate);
+            break;
+
+        case SSTV_MODE_PD160:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(382, sample_rate);
+            break;
+
+        case SSTV_MODE_PD180:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            break;
+
+        case SSTV_MODE_PD240:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(382, sample_rate);
+            break;
+
+        case SSTV_MODE_PD290:
+            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            break;
+
+        /*
+         * invalid mode
+         */
+        default:
+            return SSTV_BAD_MODE;
+    }
+
+    /* compute pixel value to delta phase lookup table */
+    for (uint32_t i = 0; i < 256; i ++) {
+        uint64_t freq_t255 =
+            (uint64_t)desc->pixel.low_freq.hz * 255 + ((uint64_t)desc->pixel.bandwidth.hz * i);
+
+        uint64_t dphase = (freq_t255 << 32) / ((uint64_t)(sample_rate) * 255);
+
+        desc->pixel.val_phase_delta[i] = (uint32_t) dphase;
+    }
+
+    /* all ok */
+    return SSTV_OK;
 }

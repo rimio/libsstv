@@ -11,7 +11,60 @@
 #include "libsstv.h"
 
 /*
- * Memory management functions
+ * Mode timings and frequency descriptors
+ */
+typedef struct {
+    uint32_t hz;
+    uint32_t phase_delta;
+} sstv_freq_desc_t;
+
+typedef struct {
+    uint32_t usec;
+    uint32_t usamp;
+} sstv_timing_desc_t;
+
+typedef struct {
+    /* Header */
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } leader_tone;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } break_tone;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t sep_freq;
+        sstv_freq_desc_t low_freq;
+        sstv_freq_desc_t high_freq;
+    } vis;
+
+    /* Mode */
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } sync;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } porch;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t low_freq;
+        sstv_freq_desc_t bandwidth;
+
+        /* lookup table from value to delta-phase */
+        uint32_t val_phase_delta[256];
+    } pixel;
+} sstv_mode_descriptor_t;
+
+/*
+ * Memory management
  */
 extern sstv_malloc_t sstv_malloc_user;
 extern sstv_free_t sstv_free_user;
@@ -21,5 +74,8 @@ extern sstv_free_t sstv_free_user;
  */
 extern uint8_t
 sstv_get_visp_code(sstv_mode_t mode);
+
+extern sstv_error_t
+sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descriptor_t *desc);
 
 #endif
