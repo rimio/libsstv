@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     }
 
     /* get raw RGB (and convert it if necessary) */
-    image.colorSpace(Magick::RGBColorspace);
+    image.colorSpace(Magick::sRGBColorspace);
     Magick::PixelData blob(image, "RGB", Magick::CharPixel);
     image_buffer = (uint8_t *)blob.data();
 
