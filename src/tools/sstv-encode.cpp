@@ -28,7 +28,57 @@ sstv_mode_t mode_from_string(std::string mode)
 {
     std::transform(mode.begin(), mode.end(), mode.begin(), ::toupper);
 
-    if (mode == "PD50") {
+    if (mode == "ROBOT_BW8_R"){
+        return SSTV_MODE_ROBOT_BW8_R;
+    } else if (mode == "ROBOT_BW8_G"){
+        return SSTV_MODE_ROBOT_BW8_G;
+    } else if (mode == "ROBOT_BW8_B"){
+        return SSTV_MODE_ROBOT_BW8_B;
+    } else if (mode == "ROBOT_BW12_R") {
+        return SSTV_MODE_ROBOT_BW12_R;
+    } else if (mode == "ROBOT_BW12_G") {
+        return SSTV_MODE_ROBOT_BW12_G;
+    } else if (mode == "ROBOT_BW12_B") {
+        return SSTV_MODE_ROBOT_BW12_B;
+    } else if (mode == "ROBOT_BW24_R") {
+        return SSTV_MODE_ROBOT_BW24_R;
+    } else if (mode == "ROBOT_BW24_G") {
+        return SSTV_MODE_ROBOT_BW24_G;
+    } else if (mode == "ROBOT_BW24_B") {
+        return SSTV_MODE_ROBOT_BW24_B;
+    } else if (mode == "ROBOT_BW36_R") {
+        return SSTV_MODE_ROBOT_BW36_R;
+    } else if (mode == "ROBOT_BW36_G") {
+        return SSTV_MODE_ROBOT_BW36_G;
+    } else if (mode == "ROBOT_BW36_B") {
+        return SSTV_MODE_ROBOT_BW36_B;
+    } else if (mode == "ROBOT_C12") {
+        return SSTV_MODE_ROBOT_C12;
+    } else if (mode == "ROBOT_C24") {
+        return SSTV_MODE_ROBOT_C24;
+    } else if (mode == "ROBOT_C36") {
+        return SSTV_MODE_ROBOT_C36;
+    } else if (mode == "ROBOT_C72") {
+        return SSTV_MODE_ROBOT_C72;
+    } else if (mode == "SCOTTIE_S1") {
+        return SSTV_MODE_SCOTTIE_S1;
+    } else if (mode == "SCOTTIE_S2") {
+        return SSTV_MODE_SCOTTIE_S2;
+    } else if (mode == "SCOTTIE_S3") {
+        return SSTV_MODE_SCOTTIE_S3;
+    } else if (mode == "SCOTTIE_S4") {
+        return SSTV_MODE_SCOTTIE_S4;
+    } else if (mode == "SCOTTIE_DX") {
+        return SSTV_MODE_SCOTTIE_DX;
+    } else if (mode == "MARTIN_M1") {
+        return SSTV_MODE_MARTIN_M1;
+    } else if (mode == "MARTIN_M2") {
+        return SSTV_MODE_MARTIN_M2;
+    } else if (mode == "MARTIN_M3") {
+        return SSTV_MODE_MARTIN_M3;
+    } else if (mode == "MARTIN_M4") {
+        return SSTV_MODE_MARTIN_M4;
+    } else if (mode == "PD50") {
         return SSTV_MODE_PD50;
     } else if (mode == "PD90") {
         return SSTV_MODE_PD90;

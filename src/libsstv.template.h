@@ -59,17 +59,52 @@ typedef enum {
 } sstv_error_t;
 
 /*
- * SSTV modes
+ * SSTV modes (value is VIS+Parity)
  */
 typedef enum {
+    /* Robot modes */
+    SSTV_MODE_ROBOT_BW8_R       = 129,
+    SSTV_MODE_ROBOT_BW8_G       = 130,
+    SSTV_MODE_ROBOT_BW8_B       = 3,
+
+    SSTV_MODE_ROBOT_BW12_R      = 5,
+    SSTV_MODE_ROBOT_BW12_G      = 6,
+    SSTV_MODE_ROBOT_BW12_B      = 135,
+
+    SSTV_MODE_ROBOT_BW24_R      = 9,
+    SSTV_MODE_ROBOT_BW24_G      = 10,
+    SSTV_MODE_ROBOT_BW24_B      = 139,
+
+    SSTV_MODE_ROBOT_BW36_R      = 141,
+    SSTV_MODE_ROBOT_BW36_G      = 142,
+    SSTV_MODE_ROBOT_BW36_B      = 15,
+
+    SSTV_MODE_ROBOT_C12         = 0,
+    SSTV_MODE_ROBOT_C24         = 132,
+    SSTV_MODE_ROBOT_C36         = 136,
+    SSTV_MODE_ROBOT_C72         = 12,
+
+    /* Scottie modes */
+    SSTV_MODE_SCOTTIE_S1        = 60,
+    SSTV_MODE_SCOTTIE_S2        = 184,
+    SSTV_MODE_SCOTTIE_S3        = 180,
+    SSTV_MODE_SCOTTIE_S4        = 48,
+    SSTV_MODE_SCOTTIE_DX        = 204,
+
+    /* Martin modes */
+    SSTV_MODE_MARTIN_M1         = 172,
+    SSTV_MODE_MARTIN_M2         = 40,
+    SSTV_MODE_MARTIN_M3         = 36,
+    SSTV_MODE_MARTIN_M4         = 160,
+
     /* PD modes */
-    SSTV_MODE_PD50,
-    SSTV_MODE_PD90,
-    SSTV_MODE_PD120,
-    SSTV_MODE_PD160,
-    SSTV_MODE_PD180,
-    SSTV_MODE_PD240,
-    SSTV_MODE_PD290
+    SSTV_MODE_PD50              = 221,
+    SSTV_MODE_PD90              = 99,
+    SSTV_MODE_PD120             = 95,
+    SSTV_MODE_PD160             = 226,
+    SSTV_MODE_PD180             = 96,
+    SSTV_MODE_PD240             = 225,
+    SSTV_MODE_PD290             = 222
 } sstv_mode_t;
 
 /*

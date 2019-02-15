@@ -72,9 +72,6 @@ extern sstv_free_t sstv_free_user;
 /*
  * Utility functions
  */
-extern uint8_t
-sstv_get_visp_code(sstv_mode_t mode);
-
 extern sstv_error_t
 sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descriptor_t *desc);
 

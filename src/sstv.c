@@ -160,6 +160,119 @@ sstv_error_t
 sstv_get_mode_image_props(sstv_mode_t mode, uint32_t *width, uint32_t *height, sstv_image_format_t *format)
 {
     switch (mode) {
+        /* Robot modes */
+        case SSTV_MODE_ROBOT_BW8_R:
+        case SSTV_MODE_ROBOT_BW8_G:
+        case SSTV_MODE_ROBOT_BW8_B:
+            if (width) *width = 160;
+            if (height) *height = 120;
+            if (format) *format = SSTV_FORMAT_Y;
+            break;
+
+        case SSTV_MODE_ROBOT_BW12_R:
+        case SSTV_MODE_ROBOT_BW12_G:
+        case SSTV_MODE_ROBOT_BW12_B:
+            if (width) *width = 320;
+            if (height) *height = 120;
+            if (format) *format = SSTV_FORMAT_Y;
+            break;
+
+        case SSTV_MODE_ROBOT_BW24_R:
+        case SSTV_MODE_ROBOT_BW24_G:
+        case SSTV_MODE_ROBOT_BW24_B:
+            if (width) *width = 320;
+            if (height) *height = 240;
+            if (format) *format = SSTV_FORMAT_Y;
+            break;
+
+        case SSTV_MODE_ROBOT_BW36_R:
+        case SSTV_MODE_ROBOT_BW36_G:
+        case SSTV_MODE_ROBOT_BW36_B:
+            if (width) *width = 320;
+            if (height) *height = 240;
+            if (format) *format = SSTV_FORMAT_Y;
+            break;
+
+        case SSTV_MODE_ROBOT_C12:
+            if (width) *width = 160;
+            if (height) *height = 120;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+
+        case SSTV_MODE_ROBOT_C24:
+            if (width) *width = 320;
+            if (height) *height = 120;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+
+        case SSTV_MODE_ROBOT_C36:
+            if (width) *width = 320;
+            if (height) *height = 240;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+
+        case SSTV_MODE_ROBOT_C72:
+            if (width) *width = 320;
+            if (height) *height = 240;
+            if (format) *format = SSTV_FORMAT_YCBCR;
+            break;
+        
+        /* Scottie modes */
+        case SSTV_MODE_SCOTTIE_S1:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_SCOTTIE_S2:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_SCOTTIE_S3:
+            if (width) *width = 320;
+            if (height) *height = 128;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_SCOTTIE_S4:
+            if (width) *width = 320;
+            if (height) *height = 128;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_SCOTTIE_DX:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        /* Martin modes */
+        case SSTV_MODE_MARTIN_M1:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_MARTIN_M2:
+            if (width) *width = 320;
+            if (height) *height = 256;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_MARTIN_M3:
+            if (width) *width = 320;
+            if (height) *height = 128;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
+        case SSTV_MODE_MARTIN_M4:
+            if (width) *width = 320;
+            if (height) *height = 128;
+            if (format) *format = SSTV_FORMAT_RGB;
+            break;
+
         /* PD modes */
         case SSTV_MODE_PD50:
             if (width) *width = 320;
@@ -341,36 +454,6 @@ sstv_pack_signal(sstv_signal_t *sig, sstv_sample_type_t type, uint32_t capacity,
     return SSTV_OK;
 }
 
-uint8_t
-sstv_get_visp_code(sstv_mode_t mode)
-{
-    switch (mode) {
-        case SSTV_MODE_PD50:
-            return 221;
-
-        case SSTV_MODE_PD90:
-            return 99;
-
-        case SSTV_MODE_PD120:
-            return 95;
-
-        case SSTV_MODE_PD160:
-            return 226;
-
-        case SSTV_MODE_PD180:
-            return 96;
-
-        case SSTV_MODE_PD240:
-            return 225;
-
-        case SSTV_MODE_PD290:
-            return 222;
-
-        default:
-            return 0;
-    }
-}
-
 sstv_error_t
 sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descriptor_t *desc)
 {
@@ -392,6 +475,58 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
 
     /* Mode frequencies */
     switch (mode) {
+        /*
+         * Robot modes
+         */
+        case SSTV_MODE_ROBOT_BW8_R:
+        case SSTV_MODE_ROBOT_BW8_G:
+        case SSTV_MODE_ROBOT_BW8_B:
+        case SSTV_MODE_ROBOT_BW12_R:
+        case SSTV_MODE_ROBOT_BW12_G:
+        case SSTV_MODE_ROBOT_BW12_B:
+        case SSTV_MODE_ROBOT_BW24_R:
+        case SSTV_MODE_ROBOT_BW24_G:
+        case SSTV_MODE_ROBOT_BW24_B:
+        case SSTV_MODE_ROBOT_BW36_R:
+        case SSTV_MODE_ROBOT_BW36_G:
+        case SSTV_MODE_ROBOT_BW36_B:
+        case SSTV_MODE_ROBOT_C12:
+        case SSTV_MODE_ROBOT_C24:
+        case SSTV_MODE_ROBOT_C36:
+        case SSTV_MODE_ROBOT_C72:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+        
+        /*
+         * Scottie modes
+         */
+        case SSTV_MODE_SCOTTIE_S1:
+        case SSTV_MODE_SCOTTIE_S2:
+        case SSTV_MODE_SCOTTIE_S3:
+        case SSTV_MODE_SCOTTIE_S4:
+        case SSTV_MODE_SCOTTIE_DX:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+
+        /*
+         * Martin modes
+         */
+        case SSTV_MODE_MARTIN_M1:
+        case SSTV_MODE_MARTIN_M2:
+        case SSTV_MODE_MARTIN_M3:
+        case SSTV_MODE_MARTIN_M4:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+
         /*
          * PD modes
          */
@@ -417,6 +552,87 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
 
     /* Mode desc */
     switch (mode) {
+        /*
+         * Robot modes
+         */
+        case SSTV_MODE_ROBOT_BW8_R:
+        case SSTV_MODE_ROBOT_BW8_G:
+        case SSTV_MODE_ROBOT_BW8_B:
+        case SSTV_MODE_ROBOT_BW12_R:
+        case SSTV_MODE_ROBOT_BW12_G:
+        case SSTV_MODE_ROBOT_BW12_B:
+        case SSTV_MODE_ROBOT_BW24_R:
+        case SSTV_MODE_ROBOT_BW24_G:
+        case SSTV_MODE_ROBOT_BW24_B:
+        case SSTV_MODE_ROBOT_BW36_R:
+        case SSTV_MODE_ROBOT_BW36_G:
+        case SSTV_MODE_ROBOT_BW36_B:
+        case SSTV_MODE_ROBOT_C12:
+        case SSTV_MODE_ROBOT_C24:
+        case SSTV_MODE_ROBOT_C36:
+        case SSTV_MODE_ROBOT_C72:
+            break;
+        
+        /*
+         * Scottie modes
+         */
+        case SSTV_MODE_SCOTTIE_S1:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(432, sample_rate);
+            break;
+
+        case SSTV_MODE_SCOTTIE_S2:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            break;
+
+        case SSTV_MODE_SCOTTIE_S3:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(432, sample_rate);
+            break;
+
+        case SSTV_MODE_SCOTTIE_S4:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            break;
+
+        case SSTV_MODE_SCOTTIE_DX:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(1080, sample_rate);
+            break;
+        
+        /*
+         * Martin modes
+         */
+        case SSTV_MODE_MARTIN_M1:
+            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(458, sample_rate);
+            break;
+
+        case SSTV_MODE_MARTIN_M2:
+            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(229, sample_rate);
+            break;
+
+        case SSTV_MODE_MARTIN_M3:
+            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(458, sample_rate);
+            break;
+
+        case SSTV_MODE_MARTIN_M4:
+            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(229, sample_rate);
+            break;
+
         /*
          * PD modes
          */
