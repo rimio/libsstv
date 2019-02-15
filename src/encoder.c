@@ -44,9 +44,18 @@ typedef enum {
     SSTV_ENCODER_STATE_SYNC,
     SSTV_ENCODER_STATE_SYNC_FIRST,
     SSTV_ENCODER_STATE_PORCH,
+    SSTV_ENCODER_STATE_PORCH2,
     SSTV_ENCODER_STATE_PORCH_R,
     SSTV_ENCODER_STATE_PORCH_G,
     SSTV_ENCODER_STATE_PORCH_B,
+    SSTV_ENCODER_STATE_PORCH_BY,
+    SSTV_ENCODER_STATE_PORCH_RY,
+
+    /* separator */
+    SSTV_ENCODER_STATE_SEPARATOR,
+    SSTV_ENCODER_STATE_SEPARATOR2,
+    SSTV_ENCODER_STATE_SEPARATOR_BY,
+    SSTV_ENCODER_STATE_SEPARATOR_RY,
 
     /* scan */
     SSTV_ENCODER_STATE_Y_SCAN,
@@ -215,8 +224,242 @@ sstv_delete_encoder(void *ctx)
 }
 
 static sstv_error_t
-sstv_encode_robot_state_change(sstv_encoder_context_t *context)
+sstv_encode_robot_bw_state_change(sstv_encoder_context_t *context)
 {
+    return SSTV_OK;
+}
+
+static sstv_error_t
+sstv_encode_robot_cfull_state_change(sstv_encoder_context_t *context)
+{
+    /* start communication */
+    if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line = 0;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* sync->porch */
+    if (context->state == SSTV_ENCODER_STATE_SYNC) {
+        context->state = SSTV_ENCODER_STATE_PORCH;
+        FSK(context, context->descriptor.porch.time, context->descriptor.porch.freq);
+        return SSTV_OK;
+    }
+
+    /* porch->y or y->y */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH)
+        || (context->state == SSTV_ENCODER_STATE_Y_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH) {
+            context->extra.scan.curr_col = 0;
+        }
+
+        context->state = SSTV_ENCODER_STATE_Y_SCAN;
+
+        uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint8_t y = context->image.buffer[pix_offset * 3];
+        FSK_PIXEL(context, context->descriptor.pixel.time, y);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* y->separator */
+    if (context->state == SSTV_ENCODER_STATE_Y_SCAN) {
+        context->state = SSTV_ENCODER_STATE_SEPARATOR_RY;
+        FSK(context, context->descriptor.separator.time, context->descriptor.separator.freq);
+        return SSTV_OK;
+    }
+
+    /* separator -> porch_ry */
+    if (context->state == SSTV_ENCODER_STATE_SEPARATOR_RY)
+    {
+        context->state = SSTV_ENCODER_STATE_PORCH_RY;
+        FSK(context, context->descriptor.porch2.time, context->descriptor.porch2.freq);
+        return SSTV_OK;
+    }
+
+    /* porch_ry->ry_scan or ry->ry */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH_RY)
+        || (context->state == SSTV_ENCODER_STATE_RY_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH_RY) {
+            context->extra.scan.curr_col = 0;
+        }
+        context->state = SSTV_ENCODER_STATE_RY_SCAN;
+
+        uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint8_t ry = context->image.buffer[pix_offset * 3 + 2];
+        FSK_PIXEL(context, context->descriptor.pixel.time2, ry);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* ry_scan->separator2 */
+    if (context->state == SSTV_ENCODER_STATE_RY_SCAN) {
+        context->state = SSTV_ENCODER_STATE_SEPARATOR_BY;
+        FSK(context, context->descriptor.separator2.time, context->descriptor.separator2.freq);
+        return SSTV_OK;
+    }
+
+    /* separator2 -> porch_by */
+    if (context->state == SSTV_ENCODER_STATE_SEPARATOR_BY)
+    {
+        context->state = SSTV_ENCODER_STATE_PORCH_BY;
+        FSK(context, context->descriptor.porch2.time, context->descriptor.porch2.freq);
+        return SSTV_OK;
+    }
+
+    /* porch_by->by_scan or by->by */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH_BY)
+        || (context->state == SSTV_ENCODER_STATE_BY_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH_BY) {
+            context->extra.scan.curr_col = 0;
+        }
+        context->state = SSTV_ENCODER_STATE_BY_SCAN;
+
+        uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint8_t by = context->image.buffer[pix_offset * 3 + 1];
+        FSK_PIXEL(context, context->descriptor.pixel.time2, by);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* advance line (by->sync) */
+    if ((context->state == SSTV_ENCODER_STATE_BY_SCAN)
+        && (context->extra.scan.curr_line < context->image.height-1))
+    {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line ++;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* no more state changes, done */
+    context->state = SSTV_ENCODER_STATE_END;
+    return SSTV_OK;
+}
+
+static sstv_error_t
+sstv_encode_robot_chalf_state_change(sstv_encoder_context_t *context)
+{
+    /* start communication */
+    if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line = 0;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* sync->porch */
+    if (context->state == SSTV_ENCODER_STATE_SYNC) {
+        context->state = SSTV_ENCODER_STATE_PORCH;
+        FSK(context, context->descriptor.porch.time, context->descriptor.porch.freq);
+        return SSTV_OK;
+    }
+
+    /* porch->y or y->y */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH)
+        || (context->state == SSTV_ENCODER_STATE_Y_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH) {
+            context->extra.scan.curr_col = 0;
+        }
+
+        context->state = SSTV_ENCODER_STATE_Y_SCAN;
+
+        uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint8_t y = context->image.buffer[pix_offset * 3];
+        FSK_PIXEL(context, context->descriptor.pixel.time, y);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* y->separator/separator2 */
+    if (context->state == SSTV_ENCODER_STATE_Y_SCAN) {
+        if (context->extra.scan.curr_line % 2 == 0) {
+            context->state = SSTV_ENCODER_STATE_SEPARATOR;
+            FSK(context, context->descriptor.separator.time, context->descriptor.separator.freq);
+        } else {
+            context->state = SSTV_ENCODER_STATE_SEPARATOR2;
+            FSK(context, context->descriptor.separator2.time, context->descriptor.separator2.freq);
+        }
+
+        return SSTV_OK;
+    }
+
+    /* separator/separator2 -> porch2 */
+    if (context->state == SSTV_ENCODER_STATE_SEPARATOR
+        || context->state == SSTV_ENCODER_STATE_SEPARATOR2)
+    {
+        context->state = SSTV_ENCODER_STATE_PORCH2;
+        FSK(context, context->descriptor.porch2.time, context->descriptor.porch2.freq);
+        return SSTV_OK;
+    }
+
+    /* porch2->ry_scan or ry->ry */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH2 && context->extra.scan.curr_line % 2 == 0)
+        || (context->state == SSTV_ENCODER_STATE_RY_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH2) {
+            context->extra.scan.curr_col = 0;
+        }
+        context->state = SSTV_ENCODER_STATE_RY_SCAN;
+
+        uint32_t pix_offset_l0 = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint32_t pix_offset_l1 = context->image.width * (context->extra.scan.curr_line + 1) + context->extra.scan.curr_col;
+        uint8_t r1 = context->image.buffer[pix_offset_l0 * 3 + 2];
+        uint8_t r2 = context->image.buffer[pix_offset_l1 * 3 + 2];
+        uint8_t r = (r1 + r2) / 2;
+        FSK_PIXEL(context, context->descriptor.pixel.time2, r);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* porch2->by_scan or by->by */
+    if ((context->state == SSTV_ENCODER_STATE_PORCH2 && context->extra.scan.curr_line % 2 == 1)
+        || (context->state == SSTV_ENCODER_STATE_BY_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_PORCH2) {
+            context->extra.scan.curr_col = 0;
+        }
+        context->state = SSTV_ENCODER_STATE_BY_SCAN;
+
+        uint32_t pix_offset_l0 = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint32_t pix_offset_l1 = context->image.width * (context->extra.scan.curr_line - 1) + context->extra.scan.curr_col;
+        uint8_t b1 = context->image.buffer[pix_offset_l0 * 3 + 1];
+        uint8_t b2 = context->image.buffer[pix_offset_l1 * 3 + 1];
+        uint8_t b = (b1 + b2) / 2;
+        FSK_PIXEL(context, context->descriptor.pixel.time2, b);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* advance line (ry/by->sync) */
+    if ((context->state == SSTV_ENCODER_STATE_RY_SCAN || context->state == SSTV_ENCODER_STATE_BY_SCAN)
+        && (context->extra.scan.curr_line < context->image.height-1))
+    {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line ++;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* no more state changes, done */
+    context->state = SSTV_ENCODER_STATE_END;
     return SSTV_OK;
 }
 
@@ -641,11 +884,15 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         case SSTV_MODE_ROBOT_BW36_R:
         case SSTV_MODE_ROBOT_BW36_G:
         case SSTV_MODE_ROBOT_BW36_B:
+            return sstv_encode_robot_bw_state_change(context);
+
         case SSTV_MODE_ROBOT_C12:
-        case SSTV_MODE_ROBOT_C24:
         case SSTV_MODE_ROBOT_C36:
+            return sstv_encode_robot_chalf_state_change(context);
+
+        case SSTV_MODE_ROBOT_C24:
         case SSTV_MODE_ROBOT_C72:
-            return sstv_encode_robot_state_change(context);
+            return sstv_encode_robot_cfull_state_change(context);
         
         /* Scottie modes */
         case SSTV_MODE_SCOTTIE_S1:

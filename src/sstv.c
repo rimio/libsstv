@@ -496,6 +496,9 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
         case SSTV_MODE_ROBOT_C72:
             desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
             desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->porch2.freq = FREQ_DESC_INIT(1900, sample_rate);
+            desc->separator.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->separator2.freq = FREQ_DESC_INIT(2300, sample_rate);
             desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
             desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
             break;
@@ -567,10 +570,46 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
         case SSTV_MODE_ROBOT_BW36_R:
         case SSTV_MODE_ROBOT_BW36_G:
         case SSTV_MODE_ROBOT_BW36_B:
+            break;
+
         case SSTV_MODE_ROBOT_C12:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(375, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(187, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_C24:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(137, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_C36:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(137, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_C72:
+            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(431, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(216, sample_rate);
             break;
         
         /*

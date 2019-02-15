@@ -55,6 +55,22 @@ typedef struct {
 
     struct {
         sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } porch2;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } separator;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_freq_desc_t freq;
+    } separator2;
+
+    struct {
+        sstv_timing_desc_t time;
+        sstv_timing_desc_t time2;
         sstv_freq_desc_t low_freq;
         sstv_freq_desc_t bandwidth;
 
