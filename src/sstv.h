@@ -19,7 +19,7 @@ typedef struct {
 } sstv_freq_desc_t;
 
 typedef struct {
-    uint32_t usec;
+    uint32_t nsec;
     uint32_t usamp;
 } sstv_timing_desc_t;
 

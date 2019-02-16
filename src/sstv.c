@@ -24,7 +24,7 @@
 /*
  * Timings macros
  */
-#define TIME_DESC_INIT(time_us, sample_rate) ((sstv_timing_desc_t){ (time_us), ((uint64_t)(time_us) * (uint64_t)(sample_rate)) })
+#define TIME_DESC_INIT(time_ns, sample_rate) ((sstv_timing_desc_t){ (time_ns), ((uint64_t)(time_ns) * (uint64_t)(sample_rate) / 1000) })
 #define FREQ_DESC_INIT(freq, sample_rate) ((sstv_freq_desc_t){ (freq), ((((uint64_t)(freq)) << 32) / (uint64_t)(sample_rate)) })
 
 /*
@@ -462,13 +462,13 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
     }
 
     /* Common desc and frequencies */
-    desc->leader_tone.time = TIME_DESC_INIT(300000, sample_rate);
+    desc->leader_tone.time = TIME_DESC_INIT(300000000, sample_rate); // 300ms
     desc->leader_tone.freq = FREQ_DESC_INIT(1900, sample_rate);
 
-    desc->break_tone.time = TIME_DESC_INIT(10000, sample_rate);
+    desc->break_tone.time = TIME_DESC_INIT(10000000, sample_rate); // 10ms
     desc->break_tone.freq = FREQ_DESC_INIT(1200, sample_rate);
 
-    desc->vis.time = TIME_DESC_INIT(30000, sample_rate);
+    desc->vis.time = TIME_DESC_INIT(30000000, sample_rate); // 300ms
     desc->vis.sep_freq = FREQ_DESC_INIT(1200, sample_rate);
     desc->vis.low_freq = FREQ_DESC_INIT(1300, sample_rate);
     desc->vis.high_freq = FREQ_DESC_INIT(1100, sample_rate);
@@ -573,148 +573,148 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
             break;
 
         case SSTV_MODE_ROBOT_C12:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
-            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(375, sample_rate);
-            desc->pixel.time2 = TIME_DESC_INIT(187, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(375000, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(187500, sample_rate);
             break;
 
         case SSTV_MODE_ROBOT_C24:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
-            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
-            desc->pixel.time2 = TIME_DESC_INIT(137, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275000, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(137500, sample_rate);
             break;
 
         case SSTV_MODE_ROBOT_C36:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
-            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
-            desc->pixel.time2 = TIME_DESC_INIT(137, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(281250, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(140625, sample_rate);
             break;
 
         case SSTV_MODE_ROBOT_C72:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(3000, sample_rate);
-            desc->porch2.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->separator.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->separator2.time = TIME_DESC_INIT(4500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(431, sample_rate);
-            desc->pixel.time2 = TIME_DESC_INIT(216, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(3000000, sample_rate);
+            desc->porch2.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->separator.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->separator2.time = TIME_DESC_INIT(4500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(431250, sample_rate);
+            desc->pixel.time2 = TIME_DESC_INIT(215625, sample_rate);
             break;
         
         /*
          * Scottie modes
          */
         case SSTV_MODE_SCOTTIE_S1:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(432, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(432000, sample_rate);
             break;
 
         case SSTV_MODE_SCOTTIE_S2:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275200, sample_rate);
             break;
 
         case SSTV_MODE_SCOTTIE_S3:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(432, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(432000, sample_rate);
             break;
 
         case SSTV_MODE_SCOTTIE_S4:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(275, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(275200, sample_rate);
             break;
 
         case SSTV_MODE_SCOTTIE_DX:
-            desc->sync.time = TIME_DESC_INIT(9000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(1500, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(1080, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(1500000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(1080000, sample_rate);
             break;
         
         /*
          * Martin modes
          */
         case SSTV_MODE_MARTIN_M1:
-            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(458, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(4862000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(457600, sample_rate);
             break;
 
         case SSTV_MODE_MARTIN_M2:
-            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(229, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(4862000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(228800, sample_rate);
             break;
 
         case SSTV_MODE_MARTIN_M3:
-            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(458, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(4862000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(457600, sample_rate);
             break;
 
         case SSTV_MODE_MARTIN_M4:
-            desc->sync.time = TIME_DESC_INIT(4862, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(572, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(229, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(4862000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(572000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(228800, sample_rate);
             break;
 
         /*
          * PD modes
          */
         case SSTV_MODE_PD50:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286000, sample_rate);
             break;
 
         case SSTV_MODE_PD90:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(532, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(532000, sample_rate);
             break;
 
         case SSTV_MODE_PD120:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(190, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(190000, sample_rate);
             break;
 
         case SSTV_MODE_PD160:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(382, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(382000, sample_rate);
             break;
 
         case SSTV_MODE_PD180:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286000, sample_rate);
             break;
 
         case SSTV_MODE_PD240:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(382, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(382000, sample_rate);
             break;
 
         case SSTV_MODE_PD290:
-            desc->sync.time = TIME_DESC_INIT(20000, sample_rate);
-            desc->porch.time = TIME_DESC_INIT(2080, sample_rate);
-            desc->pixel.time = TIME_DESC_INIT(286, sample_rate);
+            desc->sync.time = TIME_DESC_INIT(20000000, sample_rate);
+            desc->porch.time = TIME_DESC_INIT(2080000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(286000, sample_rate);
             break;
 
         /*
