@@ -28,7 +28,9 @@ sstv_mode_t mode_from_string(std::string mode)
 {
     std::transform(mode.begin(), mode.end(), mode.begin(), ::toupper);
 
-    if (mode == "ROBOT_BW8_R"){
+    if (mode == "FAX480") {
+        return SSTV_MODE_FAX480;
+    } else if (mode == "ROBOT_BW8_R"){
         return SSTV_MODE_ROBOT_BW8_R;
     } else if (mode == "ROBOT_BW8_G"){
         return SSTV_MODE_ROBOT_BW8_G;

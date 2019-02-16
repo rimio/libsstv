@@ -224,6 +224,51 @@ sstv_delete_encoder(void *ctx)
 }
 
 static sstv_error_t
+sstv_encode_fax480_state_change(sstv_encoder_context_t *context)
+{
+    /* start communication */
+    if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line = 0;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* sync->y */
+    if ((context->state == SSTV_ENCODER_STATE_SYNC)
+        || (context->state == SSTV_ENCODER_STATE_Y_SCAN
+            && context->extra.scan.curr_col < context->image.width))
+    {
+        if (context->state == SSTV_ENCODER_STATE_SYNC) {
+            context->extra.scan.curr_col = 0;
+        }
+
+        context->state = SSTV_ENCODER_STATE_Y_SCAN;
+
+        uint32_t pix_offset = context->image.width * context->extra.scan.curr_line + context->extra.scan.curr_col;
+        uint8_t y = context->image.buffer[pix_offset];
+        FSK_PIXEL(context, context->descriptor.pixel.time, y);
+
+        context->extra.scan.curr_col ++;
+        return SSTV_OK;
+    }
+
+    /* advance line (y->sync) */
+    if ((context->state == SSTV_ENCODER_STATE_Y_SCAN)
+        && (context->extra.scan.curr_line < context->image.height-1))
+    {
+        context->state = SSTV_ENCODER_STATE_SYNC;
+        context->extra.scan.curr_line ++;
+        FSK(context, context->descriptor.sync.time, context->descriptor.sync.freq);
+        return SSTV_OK;
+    }
+
+    /* no more state changes, done */
+    context->state = SSTV_ENCODER_STATE_END;
+    return SSTV_OK;
+}
+
+static sstv_error_t
 sstv_encode_robot_bw_state_change(sstv_encoder_context_t *context)
 {
     return SSTV_OK;
@@ -871,6 +916,10 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
 
     /* call state change routine for specific mode */
     switch (context->mode) {
+        /* Fax modes */
+        case SSTV_MODE_FAX480:
+            return sstv_encode_fax480_state_change(context);
+
         /* Robot modes */
         case SSTV_MODE_ROBOT_BW8_R:
         case SSTV_MODE_ROBOT_BW8_G:

@@ -160,6 +160,13 @@ sstv_error_t
 sstv_get_mode_image_props(sstv_mode_t mode, uint32_t *width, uint32_t *height, sstv_image_format_t *format)
 {
     switch (mode) {
+        /* FAX modes */
+        case SSTV_MODE_FAX480:
+            if (width) *width = 512;
+            if (height) *height = 480;
+            if (format) *format = SSTV_FORMAT_Y;
+            break;
+
         /* Robot modes */
         case SSTV_MODE_ROBOT_BW8_R:
         case SSTV_MODE_ROBOT_BW8_G:
@@ -172,7 +179,7 @@ sstv_get_mode_image_props(sstv_mode_t mode, uint32_t *width, uint32_t *height, s
         case SSTV_MODE_ROBOT_BW12_R:
         case SSTV_MODE_ROBOT_BW12_G:
         case SSTV_MODE_ROBOT_BW12_B:
-            if (width) *width = 320;
+            if (width) *width = 160;
             if (height) *height = 120;
             if (format) *format = SSTV_FORMAT_Y;
             break;
@@ -476,8 +483,16 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
     /* Mode frequencies */
     switch (mode) {
         /*
-         * Robot modes
+         * Fax modes
          */
+        case SSTV_MODE_FAX480:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+
+        /* Robot B&W modes */
         case SSTV_MODE_ROBOT_BW8_R:
         case SSTV_MODE_ROBOT_BW8_G:
         case SSTV_MODE_ROBOT_BW8_B:
@@ -490,6 +505,15 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
         case SSTV_MODE_ROBOT_BW36_R:
         case SSTV_MODE_ROBOT_BW36_G:
         case SSTV_MODE_ROBOT_BW36_B:
+            desc->sync.freq = FREQ_DESC_INIT(1200, sample_rate);
+            desc->porch.freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.low_freq = FREQ_DESC_INIT(1500, sample_rate);
+            desc->pixel.bandwidth = FREQ_DESC_INIT(800, sample_rate);
+            break;
+
+        /*
+         * Robot color modes
+         */
         case SSTV_MODE_ROBOT_C12:
         case SSTV_MODE_ROBOT_C24:
         case SSTV_MODE_ROBOT_C36:
@@ -556,22 +580,47 @@ sstv_get_mode_descriptor(sstv_mode_t mode, uint32_t sample_rate, sstv_mode_descr
     /* Mode desc */
     switch (mode) {
         /*
-         * Robot modes
+         * FAX modes
+         */
+        case SSTV_MODE_FAX480:
+            desc->sync.time = TIME_DESC_INIT(5120000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(512000, sample_rate);
+            break;
+
+        /*
+         * Robot B&W modes
          */
         case SSTV_MODE_ROBOT_BW8_R:
         case SSTV_MODE_ROBOT_BW8_G:
         case SSTV_MODE_ROBOT_BW8_B:
+            desc->sync.time = TIME_DESC_INIT(10000000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(350000, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_BW12_R:
         case SSTV_MODE_ROBOT_BW12_G:
         case SSTV_MODE_ROBOT_BW12_B:
+            desc->sync.time = TIME_DESC_INIT(7000000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(581250, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_BW24_R:
         case SSTV_MODE_ROBOT_BW24_G:
         case SSTV_MODE_ROBOT_BW24_B:
+            desc->sync.time = TIME_DESC_INIT(12000000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(290625, sample_rate);
+            break;
+
         case SSTV_MODE_ROBOT_BW36_R:
         case SSTV_MODE_ROBOT_BW36_G:
         case SSTV_MODE_ROBOT_BW36_B:
+            desc->sync.time = TIME_DESC_INIT(12000000, sample_rate);
+            desc->pixel.time = TIME_DESC_INIT(431250, sample_rate);
             break;
 
+        /*
+         * Robot color modes
+         */
         case SSTV_MODE_ROBOT_C12:
             desc->sync.time = TIME_DESC_INIT(9000000, sample_rate);
             desc->porch.time = TIME_DESC_INIT(3000000, sample_rate);

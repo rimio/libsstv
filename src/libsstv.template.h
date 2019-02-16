@@ -62,6 +62,9 @@ typedef enum {
  * SSTV modes (value is VIS+Parity)
  */
 typedef enum {
+    /* FAX modes */
+    SSTV_MODE_FAX480            = 85,
+
     /* Robot modes */
     SSTV_MODE_ROBOT_BW8_R       = 129,
     SSTV_MODE_ROBOT_BW8_G       = 130,
