@@ -224,7 +224,7 @@ sstv_delete_encoder(void *ctx)
 }
 
 static sstv_error_t
-sstv_encode_fax480_state_change(sstv_encoder_context_t *context)
+sstv_encode_bw_state_change(sstv_encoder_context_t *context)
 {
     /* start communication */
     if (context->state == SSTV_ENCODER_STATE_VIS_STOP_BIT) {
@@ -265,12 +265,6 @@ sstv_encode_fax480_state_change(sstv_encoder_context_t *context)
 
     /* no more state changes, done */
     context->state = SSTV_ENCODER_STATE_END;
-    return SSTV_OK;
-}
-
-static sstv_error_t
-sstv_encode_robot_bw_state_change(sstv_encoder_context_t *context)
-{
     return SSTV_OK;
 }
 
@@ -918,7 +912,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
     switch (context->mode) {
         /* Fax modes */
         case SSTV_MODE_FAX480:
-            return sstv_encode_fax480_state_change(context);
+            return sstv_encode_bw_state_change(context);
 
         /* Robot modes */
         case SSTV_MODE_ROBOT_BW8_R:
@@ -933,7 +927,7 @@ sstv_encode_state_change(sstv_encoder_context_t *context)
         case SSTV_MODE_ROBOT_BW36_R:
         case SSTV_MODE_ROBOT_BW36_G:
         case SSTV_MODE_ROBOT_BW36_B:
-            return sstv_encode_robot_bw_state_change(context);
+            return sstv_encode_bw_state_change(context);
 
         case SSTV_MODE_ROBOT_C12:
         case SSTV_MODE_ROBOT_C36:
