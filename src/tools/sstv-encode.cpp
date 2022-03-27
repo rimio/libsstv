@@ -18,7 +18,7 @@
 /*
  * Command line flags
  */
-DEFINE_bool(logtostderr, false, "Only log to stderr");
+//DEFINE_bool(logtostderr, false, "Only log to stderr");
 DEFINE_string(mode, "", "SSTV mode for encoder");
 DEFINE_string(input, "", "input image");
 DEFINE_string(output, "", "output WAV file");
