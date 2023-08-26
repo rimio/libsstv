@@ -2,7 +2,7 @@
 
 *NOTE: The current pre-release version of the library only supports encoding of images in a multitude of modes. Decoding support is planned for the 1.0.0 version, but as of yet no work has been done in that direction.*
 
-SSTV C encoder/decoder library suitable for both desktop and embedded applications.
+SSTV encoder/~~decoder~~ C library suitable for both desktop and embedded applications.
 
 ## Building and installing
 
@@ -46,6 +46,12 @@ To install these packages in ArchLinux:
 ```
 pacman -S imagemagick libsndfile
 ```
+
+## License
+
+Copyright (c) 2018-2023 Vasile Vilvoiu (YO7JBP) <vasi@vilvoiu.ro>
+
+libsstv is free software; you can redistribute it and/or modify it under the terms of the MIT license. See LICENSE for details.
 
 ## Acknowledgements
 

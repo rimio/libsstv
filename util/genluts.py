@@ -6,7 +6,7 @@ f = open('src/luts.c', 'w')
 
 # header
 f.write('/*\n')
-f.write(' * Copyright (c) 2018-{} Vasile Vilvoiu (YO7JBP) <vasi.vilvoiu@gmail.com>\n'.format(datetime.datetime.now().date().strftime("%Y")))
+f.write(' * Copyright (c) 2018-{} Vasile Vilvoiu (YO7JBP) <vasi@vilvoiu.ro>\n'.format(datetime.datetime.now().date().strftime("%Y")))
 f.write(' *\n')
 f.write(' * libsstv is free software; you can redistribute it and/or modify\n')
 f.write(' * it under the terms of the MIT license. See LICENSE for details.\n')
