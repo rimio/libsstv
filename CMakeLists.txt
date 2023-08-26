@@ -3,8 +3,8 @@ cmake_minimum_required (VERSION 3.8)
 project (sstv LANGUAGES C CXX)
 
 # Version
-set (VERSION_MAJOR 1)
-set (VERSION_MINOR 0)
+set (VERSION_MAJOR 0)
+set (VERSION_MINOR 9)
 set (VERSION_PATCH 0)
 
 # Limtis
