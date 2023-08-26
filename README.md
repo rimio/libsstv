@@ -170,9 +170,15 @@ void *ctx;
 if (sstv_create_encoder(&ctx, image, SSTV_MODE_FAX480, SAMPLE_RATE) != SSTV_OK) {
     ... error handling ...
 }
+
+... encode the data ...
+
+if (sstv_delete_encoder(ctx) != SSTV_OK) {
+    ... error handling ...
+}
 ```
 
-#### Encoding
+#### Encoding of data
 
 The actual encoding is performed with multiple calls to `sstv_encode()`, until the whole output has been produced:
 
@@ -183,12 +189,15 @@ void *ctx;
 sstv_signal_t signal;
 ... signal packing ...
 
-sstv_error_t rc = SSTV_OK;
-while (rc != SSTV_ENCODE_END) {
-    if (sstv_encode(ctx, &signal) != SSTV_ENCODE_SUCCESSFUL) {
+sstv_error_t rc;
+do {
+    rc = sstv_encode(ctx, &signal);
+    if (rc != SSTV_ENCODE_SUCCESSFUL && rc != SSTV_ENCODE_END) {
         ... error handling ...
     }
-}
+} while (rc != SSTV_ENCODE_END);
+
+... encoder context disposal ...
 ```
 
 Note that `sstv_encode()` does not return `SSTV_OK` on success but `SSTV_ENCODE_SUCCESSFUL`.
