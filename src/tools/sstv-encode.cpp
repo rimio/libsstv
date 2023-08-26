@@ -168,9 +168,11 @@ int main(int argc, char **argv)
     void *ctx = nullptr;
     if (sstv_create_encoder(&ctx, sstv_image, mode, args::get(sample_rate)) != SSTV_OK) {
         std::cerr << "Failed to create SSTV encoder" << std::endl;
+        exit(EXIT_FAILURE);
     }
     if (!ctx) {
         std::cerr << "NULL encoder received" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* open WAV file */
@@ -181,6 +183,7 @@ int main(int argc, char **argv)
     SNDFILE *wavfile = sf_open(args::get(output).c_str(), SFM_WRITE, &wavinfo);
     if (!wavfile) {
         std::cerr << "sf_open() failed: " << sf_strerror(NULL) << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* encode */
@@ -189,6 +192,7 @@ int main(int argc, char **argv)
         sstv_error_t rc = sstv_encode(ctx, &signal);
         if (rc != SSTV_ENCODE_SUCCESSFUL && rc != SSTV_ENCODE_END) {
             std::cerr << "sstv_encode() failed with rc " << rc << std::endl;
+            exit(EXIT_FAILURE);
         }
 
         /* write to sound file */
@@ -208,6 +212,7 @@ int main(int argc, char **argv)
     std::cout << "Cleaning up" << std::endl;
     if (sstv_delete_encoder(ctx) != SSTV_OK) {
         std::cerr << "Failed to delete SSTV encoder" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* all ok */
