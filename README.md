@@ -4,13 +4,9 @@
 
 SSTV encoder/~~decoder~~ C library suitable for both desktop and embedded applications.
 
-## Sample generated file
+## Sample
 
-Input image:
-
-![testimage](/test/test-image.bmp)
-
-[Output](/test/test-image.wav) for `PD180` mode.
+[Output](/test/test-image.wav) for `PD180` mode of [this test image](/test/test-image.bmp).
 
 ## Supported modes
 
