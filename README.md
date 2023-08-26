@@ -4,6 +4,25 @@
 
 SSTV encoder/~~decoder~~ C library suitable for both desktop and embedded applications.
 
+## Sample generated file
+
+Input image:
+
+![testimage](/test/test-image.bmp)
+
+[Output](/test/test-image.wav) for `PD180` mode.
+
+## Supported modes
+
+The following modes are currently supported:
+
+* `FAX480`
+* `MARTIN_M1` `MARTIN_M2` `MARTIN_M3` `MARTIN_M4`
+* `PD50` `PD90` `PD120` `PD160` `PD180` `PD240` `PD290`
+* `ROBOT_BW8_B` `ROBOT_BW8_G` `ROBOT_BW8_R` `ROBOT_BW12_B` `ROBOT_BW12_G` `ROBOT_BW12_R` `ROBOT_BW24_B` `ROBOT_BW24_G` `ROBOT_BW24_R` `ROBOT_BW36_B` `ROBOT_BW36_G` `ROBOT_BW36_R`
+* `ROBOT_C12` `ROBOT_C24` `ROBOT_C36` `ROBOT_C72`
+* `SCOTTIE_DX` `SCOTTIE_S1` `SCOTTIE_S2` `SCOTTIE_S3` `SCOTTIE_S4`
+
 ## Building and installing
 
 Compiling the library and encoding tool:
