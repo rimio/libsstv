@@ -1,29 +1,51 @@
 # libsstv
-SSTV C encoder/decoder library for embedded systems.
 
-## Usage:
-```
-./sstv-encode
-    -input (input image) type: string default: ""
-    -mode (SSTV mode for encoder) type: string default: ""
-    -output (output WAV file) type: string default: ""
-    -sample_rate (output audio sample rate) type: uint64 default: 48000
-```
+*NOTE: The current pre-release version of the library only supports encoding of images in a multitude of modes. Decoding support is planned for the 1.0.0 version, but as of yet no work has been done in that direction.*
 
-## Install
+SSTV C encoder/decoder library suitable for both desktop and embedded applications.
 
-install dependencies (tested on devuan 4 chimaera - debian 11 bullseye based and debian 11 on raspberry pi):
+## Building and installing
+
+Compiling the library and encoding tool:
+
 ```
-sudo apt update
-sudo apt install libgoogle-glog-dev libgflags-dev libmagick++-dev libsndfile1-dev make cmake
-```
-go to the `bin` folder, run cmake and then compile with make:
-```
-cd bin
-cmake ..
+cmake .
 make
 ```
-now you can run `./sstv-encode`
+
+This will generate the following files:
+- `lib/libsstv.so` - dynamic linking version
+- `include/libsstv.h` - C header file for library
+- `bin/sstv-encode` - encoding tool
+
+If you want to skip building the encoding tool (and thus its dependencies) then you can do so by turning off the `BUILD_TOOLS` flag:
+```
+cmake . -DBUILD_TOOLS=OFF
+make
+```
+
+Installation can be performed in the following manner:
+```
+cmake . -DCMAKE_INSTALL_PREFIX=<install_prefix>
+make
+make install
+```
+
+## Dependencies
+
+The library has no dependecies.
+
+Building the encoding tool requires `ImageMagick++` and `libsndfile`.
+
+To install these packages in Ubuntu:
+```
+apt install libmagick++-dev libsndfile1-dev
+```
+
+To install these packages in ArchLinux:
+```
+pacman -S imagemagick libsndfile
+```
 
 ## Acknowledgements
 
