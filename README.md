@@ -24,3 +24,7 @@ cmake ..
 make
 ```
 now you can run `./sstv-encode`
+
+## Acknowledgements
+
+Taywee/args library by Taylor C. Richberger and Pavel Belikov, released under the MIT license.

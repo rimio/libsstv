@@ -1,151 +1,134 @@
 /*
- * Copyright (c) 2018 Vasile Vilvoiu (YO7JBP) <vasi.vilvoiu@gmail.com>
+ * Copyright (c) 2018-2023 Vasile Vilvoiu (YO7JBP) <vasi.vilvoiu@gmail.com>
  *
  * libsstv is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
  */
 
 #include <iostream>
-#include <malloc.h>
+#include <map>
+#include <cstdlib>
 
-#include <glog/logging.h>
-#include <gflags/gflags.h>
 #include <Magick++.h> 
 #include <sndfile.h>
 
 #include <libsstv.h>
 
-/*
- * Command line flags
- */
-//DEFINE_bool(logtostderr, false, "Only log to stderr");
-DEFINE_string(mode, "", "SSTV mode for encoder");
-DEFINE_string(input, "", "input image");
-DEFINE_string(output, "", "output WAV file");
-DEFINE_uint64(sample_rate, 48000, "output audio sample rate");
+#include "args.hxx"
+
+std::map<std::string, sstv_mode_t> stringToModeMap = {
+    { "FAX480", SSTV_MODE_FAX480 },
+    { "ROBOT_BW8_R", SSTV_MODE_ROBOT_BW8_R },
+    { "ROBOT_BW8_G", SSTV_MODE_ROBOT_BW8_G },
+    { "ROBOT_BW8_B", SSTV_MODE_ROBOT_BW8_B },
+    { "ROBOT_BW12_R", SSTV_MODE_ROBOT_BW12_R },
+    { "ROBOT_BW12_G", SSTV_MODE_ROBOT_BW12_G },
+    { "ROBOT_BW12_B", SSTV_MODE_ROBOT_BW12_B },
+    { "ROBOT_BW24_R", SSTV_MODE_ROBOT_BW24_R },
+    { "ROBOT_BW24_G", SSTV_MODE_ROBOT_BW24_G },
+    { "ROBOT_BW24_B", SSTV_MODE_ROBOT_BW24_B },
+    { "ROBOT_BW36_R", SSTV_MODE_ROBOT_BW36_R },
+    { "ROBOT_BW36_G", SSTV_MODE_ROBOT_BW36_G },
+    { "ROBOT_BW36_B", SSTV_MODE_ROBOT_BW36_B },
+    { "ROBOT_C12", SSTV_MODE_ROBOT_C12 },
+    { "ROBOT_C24", SSTV_MODE_ROBOT_C24 },
+    { "ROBOT_C36", SSTV_MODE_ROBOT_C36 },
+    { "ROBOT_C72", SSTV_MODE_ROBOT_C72 },
+    { "SCOTTIE_S1", SSTV_MODE_SCOTTIE_S1 },
+    { "SCOTTIE_S2", SSTV_MODE_SCOTTIE_S2 },
+    { "SCOTTIE_S3", SSTV_MODE_SCOTTIE_S3 },
+    { "SCOTTIE_S4", SSTV_MODE_SCOTTIE_S4 },
+    { "SCOTTIE_DX", SSTV_MODE_SCOTTIE_DX },
+    { "MARTIN_M1", SSTV_MODE_MARTIN_M1 },
+    { "MARTIN_M2", SSTV_MODE_MARTIN_M2 },
+    { "MARTIN_M3", SSTV_MODE_MARTIN_M3 },
+    { "MARTIN_M4", SSTV_MODE_MARTIN_M4 },
+    { "PD50", SSTV_MODE_PD50 },
+    { "PD90", SSTV_MODE_PD90 },
+    { "PD120", SSTV_MODE_PD120 },
+    { "PD160", SSTV_MODE_PD160 },
+    { "PD180", SSTV_MODE_PD180 },
+    { "PD240", SSTV_MODE_PD240 },
+    { "PD290", SSTV_MODE_PD290 },
+};
 
 sstv_mode_t mode_from_string(std::string mode)
 {
     std::transform(mode.begin(), mode.end(), mode.begin(), ::toupper);
 
-    if (mode == "FAX480") {
-        return SSTV_MODE_FAX480;
-    } else if (mode == "ROBOT_BW8_R"){
-        return SSTV_MODE_ROBOT_BW8_R;
-    } else if (mode == "ROBOT_BW8_G"){
-        return SSTV_MODE_ROBOT_BW8_G;
-    } else if (mode == "ROBOT_BW8_B"){
-        return SSTV_MODE_ROBOT_BW8_B;
-    } else if (mode == "ROBOT_BW12_R") {
-        return SSTV_MODE_ROBOT_BW12_R;
-    } else if (mode == "ROBOT_BW12_G") {
-        return SSTV_MODE_ROBOT_BW12_G;
-    } else if (mode == "ROBOT_BW12_B") {
-        return SSTV_MODE_ROBOT_BW12_B;
-    } else if (mode == "ROBOT_BW24_R") {
-        return SSTV_MODE_ROBOT_BW24_R;
-    } else if (mode == "ROBOT_BW24_G") {
-        return SSTV_MODE_ROBOT_BW24_G;
-    } else if (mode == "ROBOT_BW24_B") {
-        return SSTV_MODE_ROBOT_BW24_B;
-    } else if (mode == "ROBOT_BW36_R") {
-        return SSTV_MODE_ROBOT_BW36_R;
-    } else if (mode == "ROBOT_BW36_G") {
-        return SSTV_MODE_ROBOT_BW36_G;
-    } else if (mode == "ROBOT_BW36_B") {
-        return SSTV_MODE_ROBOT_BW36_B;
-    } else if (mode == "ROBOT_C12") {
-        return SSTV_MODE_ROBOT_C12;
-    } else if (mode == "ROBOT_C24") {
-        return SSTV_MODE_ROBOT_C24;
-    } else if (mode == "ROBOT_C36") {
-        return SSTV_MODE_ROBOT_C36;
-    } else if (mode == "ROBOT_C72") {
-        return SSTV_MODE_ROBOT_C72;
-    } else if (mode == "SCOTTIE_S1") {
-        return SSTV_MODE_SCOTTIE_S1;
-    } else if (mode == "SCOTTIE_S2") {
-        return SSTV_MODE_SCOTTIE_S2;
-    } else if (mode == "SCOTTIE_S3") {
-        return SSTV_MODE_SCOTTIE_S3;
-    } else if (mode == "SCOTTIE_S4") {
-        return SSTV_MODE_SCOTTIE_S4;
-    } else if (mode == "SCOTTIE_DX") {
-        return SSTV_MODE_SCOTTIE_DX;
-    } else if (mode == "MARTIN_M1") {
-        return SSTV_MODE_MARTIN_M1;
-    } else if (mode == "MARTIN_M2") {
-        return SSTV_MODE_MARTIN_M2;
-    } else if (mode == "MARTIN_M3") {
-        return SSTV_MODE_MARTIN_M3;
-    } else if (mode == "MARTIN_M4") {
-        return SSTV_MODE_MARTIN_M4;
-    } else if (mode == "PD50") {
-        return SSTV_MODE_PD50;
-    } else if (mode == "PD90") {
-        return SSTV_MODE_PD90;
-    } else if (mode == "PD120") {
-        return SSTV_MODE_PD120;
-    } else if (mode == "PD160") {
-        return SSTV_MODE_PD160;
-    } else if (mode == "PD180") {
-        return SSTV_MODE_PD180;
-    } else if (mode == "PD240") {
-        return SSTV_MODE_PD240;
-    } else if (mode == "PD290") {
-        return SSTV_MODE_PD290;
+    if (auto it = stringToModeMap.find(mode); it != stringToModeMap.end()) {
+        return (*it).second;
     } else {
-        LOG(FATAL) << "Unknown mode '" << mode << "'";
+        std::cerr << "Unknown mode '" << mode << "'" << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
 int main(int argc, char **argv)
 {
     /* Parse command line flags */
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    args::ArgumentParser parser("Encodes an image into an SSTV audio signal.");
+    args::HelpFlag help(parser, "help", "Display this help menu", { 'h', "help" });
+    args::Flag list(parser, "list", "list supported SSTV modes", { 'l', "list" });
+    args::Positional<std::string> modeString(parser, "mode", "the desired SSTV mode", args::Options::Required);
+    args::Positional<std::string> input(parser, "input", "input image file", args::Options::Required);
+    args::Positional<std::string> output(parser, "output", "output WAV file", args::Options::Required);
+    args::Positional<size_t> sample_rate(parser, "sample_rate", "output WAV file", 48000);
 
-    /* Initialize logging */
-    google::InitGoogleLogging(argv[0]);
-    google::InstallFailureSignalHandler();
+    try {
+        parser.ParseCLI(argc, argv);
+    } catch (args::Help&) {
+        std::cout << parser;
+        return 0;
+    } catch (const args::RequiredError& e) {
+        if (!list) {
+            std::cerr << e.what() << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    } catch (const args::ParseError& e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-    /* check input */
-    if (FLAGS_input == "") {
-        LOG(FATAL) << "Input image filename not provided, use --input";
-    }
-    if (FLAGS_output == "") {
-        LOG(FATAL) << "Output WAV file not provided, use --output";
-    }
-    if (FLAGS_mode == "") {
-        LOG(FATAL) << "Encoding mode not provided, use --mode";
+    /* list modes if required */
+    if (list) {
+        std::cout << "Supported modes:" << std::endl;
+        for (const auto& mode : stringToModeMap) {
+            std::cout << "  * " << mode.first << std::endl;
+        }
+        return 0;
     }
 
-    /* TODO: parse SSTV mode */
-    sstv_mode_t mode = mode_from_string(FLAGS_mode);
+    /* parse SSTV mode */
+    sstv_mode_t mode = mode_from_string(args::get(modeString));
 
     /* get image properties for chosen mode */
     uint32_t width, height;
     sstv_image_format_t format;
     if (sstv_get_mode_image_props(mode, &width, &height, &format) != SSTV_OK) {
-        LOG(FATAL) << "sstv_get_mode_image_props() failed";
+        std::cerr << "sstv_get_mode_image_props() failed" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* load image from file */
-    LOG(INFO) << "Loading image from " << FLAGS_input;
+    std::cout << "Loading image from " << args::get(input) << std::endl;
 
     Magick::Image image;
     uint8_t *image_buffer = NULL;
 
     try {
         /* load from file */
-        image.read(FLAGS_input);
+        image.read(args::get(input));
 
         /* resize */
-        LOG(INFO) << "Resizing to " << width << "x"<<height;
+        std::cout << "Resizing to " << width << "x" << height << std::endl;
         Magick::Geometry nsize(width, height);
         nsize.aspect(true);
         image.scale(nsize);
     } catch (int e) {
-        LOG(FATAL) << "Magick++ failed";
+        std::cerr << "Magick++ failed" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* get raw RGB (and convert it if necessary) */
@@ -155,46 +138,49 @@ int main(int argc, char **argv)
 
     sstv_image_t sstv_image;
     if (sstv_pack_image(&sstv_image, width, height, SSTV_FORMAT_RGB, image_buffer) != SSTV_OK) {
-        LOG(INFO) << image_buffer;
-        LOG(FATAL) << "sstv_pack_image() failed";
+        std::cerr << "sstv_pack_image() failed" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* convert to mode's colorspace */
     if (sstv_convert_image(&sstv_image, format) != SSTV_OK) {
-        LOG(FATAL) << "sstv_convert_image() failed";
+        std::cerr << "sstv_convert_image() failed" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* create a sample buffer for output */
     int16_t samp_buffer[128 * 1024];
     sstv_signal_t signal;
     if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT16, 128 * 1024, samp_buffer) != SSTV_OK) {
-        LOG(FATAL) << "sstv_pack_signal() failed";
+        std::cerr << "sstv_pack_signal() failed" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* initialize library */
-    LOG(INFO) << "Initializing libsstv";
+    std::cout << "Initializing libsstv" << std::endl;
     if (sstv_init(malloc, free) != SSTV_OK) {
-        LOG(FATAL) << "Failed to initialize libsstv";
+        std::cerr << "Failed to initialize libsstv" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     /* create encoder context */
-    LOG(INFO) << "Creating encoding context";
+    std::cout << "Creating encoding context" << std::endl;
     void *ctx = nullptr;
-    if (sstv_create_encoder(&ctx, sstv_image, mode, FLAGS_sample_rate) != SSTV_OK) {
-        LOG(FATAL) << "Failed to create SSTV encoder";
+    if (sstv_create_encoder(&ctx, sstv_image, mode, args::get(sample_rate)) != SSTV_OK) {
+        std::cerr << "Failed to create SSTV encoder" << std::endl;
     }
     if (!ctx) {
-        LOG(FATAL) << "NULL encoder received";
+        std::cerr << "NULL encoder received" << std::endl;
     }
 
     /* open WAV file */
     SF_INFO wavinfo;
-    wavinfo.samplerate = FLAGS_sample_rate;
+    wavinfo.samplerate = args::get(sample_rate);
     wavinfo.channels = 1;
     wavinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-    SNDFILE *wavfile = sf_open(FLAGS_output.c_str(), SFM_WRITE, &wavinfo);
+    SNDFILE *wavfile = sf_open(args::get(output).c_str(), SFM_WRITE, &wavinfo);
     if (!wavfile) {
-        LOG(FATAL) << "sf_open() failed: " << sf_strerror(NULL);
+        std::cerr << "sf_open() failed: " << sf_strerror(NULL) << std::endl;
     }
 
     /* encode */
@@ -202,12 +188,12 @@ int main(int argc, char **argv)
         /* encode block */
         sstv_error_t rc = sstv_encode(ctx, &signal);
         if (rc != SSTV_ENCODE_SUCCESSFUL && rc != SSTV_ENCODE_END) {
-            LOG(FATAL) << "sstv_encode() failed with rc " << rc;
+            std::cerr << "sstv_encode() failed with rc " << rc << std::endl;
         }
 
         /* write to sound file */
         sf_write_short(wavfile, (int16_t *)signal.buffer, signal.count);
-        LOG(INFO) << "Written " << signal.count << " samples";
+        std::cout << "Written " << signal.count << " samples" << std::endl;
 
         /* exit case */
         if (rc == SSTV_ENCODE_END) {
@@ -219,12 +205,12 @@ int main(int argc, char **argv)
     sf_close(wavfile);
 
     /* cleanup */
-    LOG(INFO) << "Cleaning up";
+    std::cout << "Cleaning up" << std::endl;
     if (sstv_delete_encoder(ctx) != SSTV_OK) {
-        LOG(FATAL) << "Failed to delete SSTV encoder";
+        std::cerr << "Failed to delete SSTV encoder" << std::endl;
     }
 
     /* all ok */
-    LOG(INFO) << "Successfuly exited";
+    std::cout << "Successfuly exited" << std::endl;
     return 0;
 }
