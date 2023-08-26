@@ -43,9 +43,19 @@ set (ENCODE_TOOL_SOURCES
 )
 
 # Library (C compiler)
-add_library (${PROJECT_NAME} SHARED ${LIB_SOURCES})
-set_property (TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE C)
-target_include_directories (${PROJECT_NAME} PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
+add_library (${PROJECT_NAME}_shared SHARED ${LIB_SOURCES})
+add_library (${PROJECT_NAME}_static STATIC ${LIB_SOURCES})
+
+set_target_properties (${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME} PUBLIC_HEADER ${INCLUDE_DIR}/libsstv.h LINKER_LANGUAGE C)
+set_target_properties (${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME ${PROJECT_NAME} PUBLIC_HEADER ${INCLUDE_DIR}/libsstv.h LINKER_LANGUAGE C)
+
+target_compile_options (${PROJECT_NAME}_static PRIVATE -nostdlib)
+
+target_include_directories (${PROJECT_NAME}_shared PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
+target_include_directories (${PROJECT_NAME}_static PUBLIC "${SRC_DIR}" PUBLIC "${INCLUDE_DIR}")
+
+install (TARGETS ${PROJECT_NAME}_shared)
+install (TARGETS ${PROJECT_NAME}_static)
 
 # Tools (C++ compiler)
 if (BUILD_TOOLS)
@@ -58,5 +68,6 @@ if (BUILD_TOOLS)
     set_property (TARGET ${PROJECT_NAME}-encode PROPERTY LINKER_LANGUAGE CXX)
     set_property (TARGET ${PROJECT_NAME}-encode PROPERTY CXX_STANDARD 17)
     target_include_directories(${PROJECT_NAME}-encode PUBLIC "${SRC_DIR}/tools" PUBLIC "${INCLUDE_DIR}" PUBLIC "${ImageMagick_INCLUDE_DIRS}")
-    target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME} ${SNDFILE} ${ImageMagick_LIBRARIES})
+    target_link_libraries (${PROJECT_NAME}-encode ${PROJECT_NAME}_shared ${SNDFILE} ${ImageMagick_LIBRARIES})
+    install (TARGETS ${PROJECT_NAME}-encode)
 endif (BUILD_TOOLS)
