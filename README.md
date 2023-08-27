@@ -147,7 +147,7 @@ Pixel format conversions can be performed in-place on an image by calling `sstv_
 Signals (`sstv_signal_t`) are objects that hold a chunk of the raw audio. They can only be created on a preallocated buffer:
 
 ```
-uint8_t signal_buffer[SIGNAL_BUFFER_CAPACITY];
+int16_t signal_buffer[SIGNAL_BUFFER_CAPACITY];
 sstv_signal_t signal;
 if (sstv_pack_signal(&signal, SSTV_SAMPLE_INT16, SIGNAL_BUFFER_CAPACITY, signal_buffer) != SSTV_OK) {
     ... error handling ...
