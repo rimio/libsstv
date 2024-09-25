@@ -21,6 +21,11 @@ The following modes are currently supported:
 
 ## Building and installing
 
+The following packaged options are available for `libsstv`:
+* [Arch User Repository package](https://aur.archlinux.org/packages/libsstv)
+* [Gentoo ebuild file](https://github.com/rimio/gentoo-overlay/tree/master/media-libs/libsstv)
+* [MacPorts package](https://ports.macports.org/port/libsstv/)
+
 Compiling the library and encoding tool:
 
 ```
