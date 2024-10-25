@@ -9,6 +9,7 @@ set (VERSION_PATCH 0)
 
 # Limtis
 set (DEFAULT_ENCODER_CONTEXT_COUNT 4)
+set (DEFAULT_DECODER_CONTEXT_COUNT 4)
 
 # Compiler setup
 set(CMAKE_C_STANDARD 99)
@@ -35,6 +36,7 @@ configure_file (
 set (LIB_SOURCES
   "${SRC_DIR}/sstv.c"
   "${SRC_DIR}/encoder.c"
+  "${SRC_DIR}/decoder.c"
   "${SRC_DIR}/luts.c"
 )
 

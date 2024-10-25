@@ -27,6 +27,7 @@ extern "C" {
  * Limits
  */
 #define SSTV_DEFAULT_ENCODER_CONTEXT_COUNT @DEFAULT_ENCODER_CONTEXT_COUNT@
+#define SSTV_DEFAULT_DECODER_CONTEXT_COUNT @DEFAULT_DECODER_CONTEXT_COUNT@
 
 /*
  * Error codes
@@ -56,6 +57,12 @@ typedef enum {
     SSTV_ENCODE_END             = 1001,
 
     SSTV_NO_DEFAULT_ENCODERS    = 1100,
+
+    /* Encoder return codes */
+    SSTV_DECODE_SUCCESSFUL      = 2000,
+    SSTV_DECODE_END             = 2001,
+
+    SSTV_NO_DEFAULT_DECODERS    = 2100,
 } sstv_error_t;
 
 /*
@@ -306,6 +313,42 @@ extern sstv_error_t sstv_delete_encoder(void *ctx);
  *            error code otherwise
  */
 extern sstv_error_t sstv_encode(void *ctx, sstv_signal_t *signal);
+
+/*
+ * Create an SSTV decoder.
+ *   out_ctx(out): output context structure pointer
+ *   sample_rate(in): input signal sample rate
+ *   returns: error code
+ *
+ * NOTE: Context shall never be modified by the user.
+ * NOTE: If an allocator/deallocator is provided via sstv_init(), then the
+ * context structure will be dynamically allocated. Otherwise, one of the
+ * default (static) structures, built into the library, will be used. There are
+ * SSTV_DEFAULT_DECODER_CONTEXT_COUNT default structures, and once these are
+ * used up, a SSTV_NO_DEFAULT_DECODERS error is returned.
+ */
+extern sstv_error_t sstv_create_decoder(void **out_ctx, uint32_t sample_rate);
+
+/*
+ * Deletes an SSTV decoder.
+ *   ctx(in): decoder context structure pointer
+ *   returns: error code
+ *
+ * NOTE: If context is one of the default decoders, then it will be marked as
+ * reusable and can be claimed again by sstv_create_decoder().
+ */
+extern sstv_error_t sstv_delete_decoder(void *ctx);
+
+/*
+ * Decode signal into SSTV image.
+ *   ctx(in): decoder context structure pointer
+ *   signal(in): input signal container
+ *   image(in): buffer where decoded image is placed
+ *   returns: SSTV_DECODE_SUCCESSFUL on successful consume of signal buffer
+ *            SSTV_DECODE_END on successful decoding of whole image
+ *            error code otherwise
+ */
+extern sstv_error_t sstv_decode(void *ctx, sstv_signal_t *signal, sstv_image_t *image);
 
 #ifdef __cplusplus
 }
