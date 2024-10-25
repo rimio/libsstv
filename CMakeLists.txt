@@ -60,6 +60,8 @@ install (TARGETS ${PROJECT_NAME}_static)
 # Tools (C++ compiler)
 if (BUILD_TOOLS)
     # Dependencies
+    add_definitions(-DMAGICKCORE_QUANTUM_DEPTH=16)
+    add_definitions(-DMAGICKCORE_HDRI_ENABLE=0)
     find_library(SNDFILE sndfile)
     find_package(ImageMagick COMPONENTS Magick++)
 
