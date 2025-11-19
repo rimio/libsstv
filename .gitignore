@@ -40,3 +40,6 @@ compile_commands.json
 *.exe
 *.out
 *.app
+
+# mkdocs
+site
