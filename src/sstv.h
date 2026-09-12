@@ -20,7 +20,7 @@ typedef struct {
 
 typedef struct {
     uint32_t nsec;
-    uint32_t usamp;
+    uint64_t usamp;
 } sstv_timing_desc_t;
 
 typedef struct {

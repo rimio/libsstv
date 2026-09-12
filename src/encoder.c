@@ -734,10 +734,10 @@ sstv_encode_pd_state_change(sstv_encoder_context_t *context)
         return SSTV_OK;
     }
 
-    /* advance line (odd->sync) */
+    /* advance line pair (odd->sync) */
     if ((context->state == SSTV_ENCODER_STATE_Y_ODD_SCAN)
         && (context->extra.scan.curr_col >= context->image.width)
-        && (context->extra.scan.curr_line < context->image.height-1))
+        && (context->extra.scan.curr_line + 2 < context->image.height))
     {
         context->state = SSTV_ENCODER_STATE_SYNC;
         context->extra.scan.curr_line += 2;
